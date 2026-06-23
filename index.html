@@ -7,15 +7,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
 
-  <!-- Firebase SDKs -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
-      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getDatabase, ref, set, onValue, update }
       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-    // ─── FIREBASE CONFIG — replace with your project's config ───────────────
+    // ─── FIREBASE CONFIG ────────────────────────────────────────────────────
     const firebaseConfig = {
       apiKey:            "AIzaSyAy9AaVjjVwuQb9K_nF8ep_eLOiba0F0IY",
       authDomain:        "ndp-medical-readiness.firebaseapp.com",
@@ -28,40 +25,64 @@
     };
     // ────────────────────────────────────────────────────────────────────────
 
-    const app  = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db   = getDatabase(app);
+    const app = initializeApp(firebaseConfig);
+    const db  = getDatabase(app);
+
+    // ─── PIN CONFIG (SHA-256 hashed) ────────────────────────────────────────
+    // Pins: CP1=cp1@Ndp2026, CP2=cp2@Ndp2026, mpN=mpN@Ndp2026, etc.
+    const PIN_MAP = {
+      "cp1@Ndp2026":   { label: "CP1 (Commander)",       role: "commander" },
+      "cp2@Ndp2026":   { label: "CP2 (Commander)",       role: "commander" },
+      "mpN@Ndp2026":   { label: "MP North",              role: "post", postId: "MP1" },
+      "mpS@Ndp2026":   { label: "MP South",              role: "post", postId: "MP2" },
+      "mpA@Ndp2026":   { label: "MP Arena",              role: "post", postId: "MP3" },
+      "mpW@Ndp2026":   { label: "MP WACA",               role: "post", postId: "MP4" },
+      "mpV@Ndp2026":   { label: "MP VVIP",               role: "post", postId: "MP5" },
+      "fapSh@Ndp2026": { label: "FAP(E) Show",           role: "post", postId: "FAP1" },
+      "fapBe@Ndp2026": { label: "FAP(E) Beneficiaries",  role: "post", postId: "FAP2" },
+      "fapCe@Ndp2026": { label: "FAP(E) Celebrations",   role: "post", postId: "FAP3" },
+    };
+
+    async function hashPin(pin) {
+      const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(pin));
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,"0")).join("");
+    }
+
+    // Pre-hash all PINs at startup
+    const HASHED_PINS = {};
+    await Promise.all(Object.keys(PIN_MAP).map(async pin => {
+      HASHED_PINS[await hashPin(pin)] = PIN_MAP[pin];
+    }));
 
     // ─── DATA CONFIG ────────────────────────────────────────────────────────
-
     const POSTS = [
-      { id: "MP1",  label: "MP North",           type: "MP",  template: "MP_STD"  },
-      { id: "MP2",  label: "MP South",           type: "MP",  template: "MP_STD"  },
-      { id: "MP3",  label: "MP Arena",           type: "MP",  template: "MP_STD"  },
-      { id: "MP4",  label: "MP WACA",            type: "MP",  template: "MP_STD"  },
-      { id: "MP5",  label: "MP VVIP",            type: "MP",  template: "MP_VVIP" },
-      { id: "FAP1", label: "FAP(E) Show",        type: "FAP", template: "FAP"     },
-      { id: "FAP2", label: "FAP(E) Beneficiaries", type: "FAP", template: "FAP"  },
-      { id: "FAP3", label: "FAP(E) Celebrations", type: "FAP", template: "FAP"   },
+      { id: "MP1",  label: "MP North",             type: "MP",  template: "MP_STD"  },
+      { id: "MP2",  label: "MP South",             type: "MP",  template: "MP_STD"  },
+      { id: "MP3",  label: "MP Arena",             type: "MP",  template: "MP_STD"  },
+      { id: "MP4",  label: "MP WACA",              type: "MP",  template: "MP_STD"  },
+      { id: "MP5",  label: "MP VVIP",              type: "MP",  template: "MP_VVIP" },
+      { id: "FAP1", label: "FAP(E) Show",          type: "FAP", template: "FAP"     },
+      { id: "FAP2", label: "FAP(E) Beneficiaries", type: "FAP", template: "FAP"     },
+      { id: "FAP3", label: "FAP(E) Celebrations",  type: "FAP", template: "FAP"     },
     ];
 
     const MANPOWER_TEMPLATE = {
       MP_STD: [
-        { role: "Doctor",       required: 2 },
-        { role: "Senior Medic", required: 1 },
-        { role: "Medic Spec",   required: 1 },
-        { role: "Medic",        required: 6 },
+        { role: "Doctor",         required: 2 },
+        { role: "Senior Medic",   required: 1 },
+        { role: "Medic Spec",     required: 1 },
+        { role: "Medic",          required: 6 },
         { role: "Paracounsellor", required: 2 },
         { role: "Attached Staff", required: 0 },
       ],
       MP_VVIP: [
-        { role: "Doctor",       required: 2 },
-        { role: "Nurse",        required: 2 },
+        { role: "Doctor",         required: 2 },
+        { role: "Nurse",          required: 2 },
         { role: "Attached Staff", required: 0 },
       ],
       FAP: [
-        { role: "Doctor",       required: 1 },
-        { role: "Medic",        required: 2 },
+        { role: "Doctor",         required: 1 },
+        { role: "Medic",          required: 2 },
         { role: "Attached Staff", required: 0 },
       ],
     };
@@ -91,12 +112,13 @@
     ];
 
     // ─── STATE ──────────────────────────────────────────────────────────────
-
-    let currentUser  = null;
+    let currentUser  = null;   // { label, role, postId? }
     let activePost   = "MP1";
     let postData     = {};
     let goLiveStatus = false;
     let goLiveTime   = null;
+    let loginAttempts = 0;
+    const MAX_ATTEMPTS = 5;
 
     function buildBlankPostData() {
       const state = {};
@@ -104,17 +126,14 @@
         const tmpl = MANPOWER_TEMPLATE[post.template];
         state[post.id] = {
           manpower: tmpl.map((r, i) => ({
-            id: i,
-            role: r.role,
-            required: r.required,
+            id: i, role: r.role, required: r.required,
             names: r.required > 0
               ? Array(r.required).fill(null).map((_, j) => ({
-                  name: r.required === 1 ? r.role : `${r.role} ${j + 1}`,
+                  name: r.required === 1 ? r.role : `${r.role} ${j+1}`,
                   present: false,
                 }))
               : [],
-            attachedCount: 0,
-            attachedPresent: 0,
+            attachedCount: 0, attachedPresent: 0,
           })),
           logistics: LOGISTICS_CHECKLIST.map(item => ({ item, checked: false })),
           ambulance: AMBULANCE_CHECKLIST.map(item => ({ item, checked: false })),
@@ -123,8 +142,76 @@
       return state;
     }
 
-    // ─── CALCULATIONS ───────────────────────────────────────────────────────
+    // ─── PIN AUTH ───────────────────────────────────────────────────────────
+    window.doLogin = async () => {
+      if (loginAttempts >= MAX_ATTEMPTS) {
+        document.getElementById("loginError").textContent = "Too many attempts. Please refresh the page.";
+        return;
+      }
+      const pin    = document.getElementById("pinInput").value.trim();
+      const errEl  = document.getElementById("loginError");
+      errEl.textContent = "";
 
+      if (!pin) { errEl.textContent = "Please enter your PIN."; return; }
+
+      const hashed = await hashPin(pin);
+      const user   = HASHED_PINS[hashed];
+
+      if (!user) {
+        loginAttempts++;
+        const remaining = MAX_ATTEMPTS - loginAttempts;
+        errEl.textContent = remaining > 0
+          ? `Invalid PIN. ${remaining} attempt(s) remaining.`
+          : "Too many failed attempts. Please refresh.";
+        document.getElementById("pinInput").value = "";
+        return;
+      }
+
+      // Valid PIN
+      currentUser = user;
+      loginAttempts = 0;
+      sessionStorage.setItem("ndp_readiness_user", JSON.stringify(user));
+
+      // If post user, set their post as active
+      if (user.role === "post") activePost = user.postId;
+
+      document.getElementById("loginScreen").style.display = "none";
+      document.getElementById("dashboard").style.display   = "flex";
+      document.getElementById("userLabel").textContent     = user.label;
+
+      postData = buildBlankPostData();
+      listenToData();
+    };
+
+    window.doLogout = () => {
+      sessionStorage.removeItem("ndp_readiness_user");
+      currentUser = null;
+      document.getElementById("loginScreen").style.display = "flex";
+      document.getElementById("dashboard").style.display   = "none";
+      document.getElementById("pinInput").value = "";
+      document.getElementById("loginError").textContent = "";
+    };
+
+    // Restore session
+    const savedUser = sessionStorage.getItem("ndp_readiness_user");
+    if (savedUser) {
+      currentUser = JSON.parse(savedUser);
+      if (currentUser.role === "post") activePost = currentUser.postId;
+      document.getElementById("loginScreen").style.display = "none";
+      document.getElementById("dashboard").style.display   = "flex";
+      document.getElementById("userLabel").textContent     = currentUser.label;
+      postData = buildBlankPostData();
+      listenToData();
+    }
+
+    // Enter key support
+    document.addEventListener("keydown", e => {
+      if (e.key === "Enter" && document.getElementById("loginScreen").style.display !== "none") {
+        window.doLogin();
+      }
+    });
+
+    // ─── CALCULATIONS ───────────────────────────────────────────────────────
     function calcManpowerPct(data) {
       const mandatory = data.filter(r => r.required > 0);
       if (!mandatory.length) return 100;
@@ -132,33 +219,23 @@
       const totalPres = mandatory.reduce((s, r) => s + r.names.filter(n => n.present).length, 0);
       return Math.round((totalPres / totalReq) * 100);
     }
-
     function calcChecklistPct(list) {
       if (!list.length) return 0;
       return Math.round((list.filter(i => i.checked).length / list.length) * 100);
     }
-
     function overallReadiness(pd) {
-      const mp  = calcManpowerPct(pd.manpower);
-      const lg  = calcChecklistPct(pd.logistics);
-      const amb = calcChecklistPct(pd.ambulance);
-      return Math.round((mp + lg + amb) / 3);
+      return Math.round((calcManpowerPct(pd.manpower) + calcChecklistPct(pd.logistics) + calcChecklistPct(pd.ambulance)) / 3);
     }
-
     function statusColor(pct) {
       return pct === 100 ? "#00ff9d" : pct >= 70 ? "#ffb800" : "#ff4444";
     }
 
     // ─── FIREBASE SYNC ──────────────────────────────────────────────────────
-
     function listenToData() {
       onValue(ref(db, "readiness"), snap => {
         const val = snap.val();
         if (val && val.posts) {
-          // Merge — preserve template structure for any new keys added later
-          POSTS.forEach(p => {
-            if (val.posts[p.id]) postData[p.id] = val.posts[p.id];
-          });
+          POSTS.forEach(p => { if (val.posts[p.id]) postData[p.id] = val.posts[p.id]; });
         }
         if (val && val.goLive !== undefined) {
           goLiveStatus = val.goLive.active || false;
@@ -171,77 +248,39 @@
     function savePostData(postId) {
       update(ref(db, `readiness/posts/${postId}`), postData[postId]);
     }
-
     function saveGoLive(active) {
       set(ref(db, "readiness/goLive"), {
         active,
         time: active ? new Date().toISOString() : null,
-        declaredBy: currentUser?.email || "Commander",
+        declaredBy: currentUser?.label || "Commander",
       });
     }
 
-    // ─── AUTH ───────────────────────────────────────────────────────────────
-
-    onAuthStateChanged(auth, user => {
-      currentUser = user;
-      if (user) {
-        document.getElementById("loginScreen").style.display  = "none";
-        document.getElementById("dashboard").style.display    = "flex";
-        document.getElementById("userEmail").textContent      = user.email;
-        postData = buildBlankPostData();
-        listenToData();
-      } else {
-        document.getElementById("loginScreen").style.display  = "flex";
-        document.getElementById("dashboard").style.display    = "none";
-      }
-    });
-
-    window.doLogin = async () => {
-      const email = document.getElementById("emailInput").value.trim();
-      const pass  = document.getElementById("passInput").value;
-      const errEl = document.getElementById("loginError");
-      errEl.textContent = "";
-      try {
-        await signInWithEmailAndPassword(auth, email, pass);
-      } catch (e) {
-        errEl.textContent = "Invalid credentials. Please try again.";
-      }
-    };
-
-    window.doLogout = () => signOut(auth);
-
     // ─── RENDER HELPERS ─────────────────────────────────────────────────────
-
     function radialGaugeSVG(pct, size = 56) {
-      const r    = (size - 8) / 2;
-      const circ = 2 * Math.PI * r;
-      const stroke = (pct / 100) * circ;
-      const color  = statusColor(pct);
-      return `
-        <svg width="${size}" height="${size}" style="transform:rotate(-90deg)">
-          <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="#1e2530" stroke-width="5"/>
-          <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="5"
-            stroke-dasharray="${stroke} ${circ}" stroke-linecap="round"
-            style="filter:drop-shadow(0 0 4px ${color})"/>
-          <text x="${size/2}" y="${size/2}" text-anchor="middle" dominant-baseline="central"
-            style="transform:rotate(90deg);transform-origin:${size/2}px ${size/2}px;
-            fill:${color};font-size:11px;font-family:'IBM Plex Mono',monospace;font-weight:600">
-            ${pct}%
-          </text>
-        </svg>`;
+      const r = (size-8)/2, circ = 2*Math.PI*r, stroke = (pct/100)*circ;
+      const color = statusColor(pct);
+      return `<svg width="${size}" height="${size}" style="transform:rotate(-90deg)">
+        <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="#1e2530" stroke-width="5"/>
+        <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="5"
+          stroke-dasharray="${stroke} ${circ}" stroke-linecap="round"
+          style="filter:drop-shadow(0 0 4px ${color})"/>
+        <text x="${size/2}" y="${size/2}" text-anchor="middle" dominant-baseline="central"
+          style="transform:rotate(90deg);transform-origin:${size/2}px ${size/2}px;
+          fill:${color};font-size:11px;font-family:'IBM Plex Mono',monospace;font-weight:600">
+          ${pct}%</text></svg>`;
     }
-
     function progressBar(pct) {
       const color = statusColor(pct);
-      return `
-        <div style="height:3px;background:#1a2530;border-radius:2px;margin-top:2px">
-          <div style="height:100%;border-radius:2px;width:${pct}%;background:${color};
-            box-shadow:0 0 4px ${color};transition:width 0.4s ease"></div>
-        </div>`;
+      return `<div style="height:3px;background:#1a2530;border-radius:2px;margin-top:2px">
+        <div style="height:100%;border-radius:2px;width:${pct}%;background:${color};
+          box-shadow:0 0 4px ${color};transition:width 0.4s ease"></div></div>`;
     }
+    const inputStyle = `width:52px;background:rgba(255,255,255,0.04);border:1px solid #1e2a35;
+      border-radius:4px;color:#c8d8e4;padding:4px 6px;font-size:11px;
+      font-family:'IBM Plex Mono',monospace;outline:none`;
 
     // ─── MAIN RENDER ────────────────────────────────────────────────────────
-
     function renderDashboard() {
       renderOverviewGrid();
       renderDetailPanel();
@@ -250,46 +289,34 @@
     }
 
     function renderOverviewGrid() {
-      const grid = document.getElementById("overviewGrid");
-      grid.innerHTML = POSTS.map(post => {
-        const pd      = postData[post.id];
-        const mp      = calcManpowerPct(pd.manpower);
-        const lg      = calcChecklistPct(pd.logistics);
-        const amb     = calcChecklistPct(pd.ambulance);
-        const overall = overallReadiness(pd);
-        const isActive = activePost === post.id;
-        const prefix   = post.type === "FAP" ? "FAP(E)" : "MP";
-        const name     = post.label.replace(/^MP\s+|^FAP\(E\)\s+/, "");
-        const prefixColor = post.type === "FAP" ? "#a78bfa" : "#4a9eff";
-        const border   = isActive ? "#4a9eff" : overall === 100 ? "#00ff9d33" : "#1e2a35";
-        const bg       = isActive ? "rgba(74,158,255,0.08)" : "rgba(10,16,24,0.6)";
-        const shadow   = isActive ? "0 0 0 1px #4a9eff,0 4px 20px rgba(74,158,255,0.15)" : "none";
-
-        return `
-          <button onclick="selectPost('${post.id}')" style="
-            background:${bg};border:1px solid ${border};border-radius:8px;
-            padding:12px 10px;cursor:pointer;transition:all 0.2s;text-align:left;
-            box-shadow:${shadow};width:100%">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
-              <div>
-                <div style="font-size:11px;font-weight:700;letter-spacing:0.1em;
-                  color:${prefixColor};margin-bottom:1px">${prefix}</div>
-                <div style="font-size:15px;font-weight:700;color:#e8f0f7;
-                  font-family:'Barlow Condensed',sans-serif;letter-spacing:0.04em;line-height:1.3">
-                  ${name}
-                </div>
-              </div>
-              ${radialGaugeSVG(overall, 52)}
-            </div>
-            ${[["MANPOWER", mp], ["LOGISTICS", lg], ["AMBULANCE", amb]].map(([lbl, p]) => `
-              <div style="margin-bottom:4px">
-                <div style="display:flex;justify-content:space-between">
-                  <span style="font-size:9px;color:#4a5a6a;letter-spacing:0.08em">${lbl}</span>
-                  <span style="font-size:9px;color:${statusColor(p)}">${p}%</span>
-                </div>
-                ${progressBar(p)}
-              </div>`).join("")}
-          </button>`;
+      document.getElementById("overviewGrid").innerHTML = POSTS.map(post => {
+        const pd = postData[post.id];
+        const mp = calcManpowerPct(pd.manpower), lg = calcChecklistPct(pd.logistics), amb = calcChecklistPct(pd.ambulance);
+        const overall = overallReadiness(pd), isActive = activePost === post.id;
+        const prefix = post.type === "FAP" ? "FAP(E)" : "MP";
+        const name   = post.label.replace(/^MP\s+|^FAP\(E\)\s+/, "");
+        const pc     = post.type === "FAP" ? "#a78bfa" : "#4a9eff";
+        const border = isActive ? "#4a9eff" : overall === 100 ? "#00ff9d33" : "#1e2a35";
+        const bg     = isActive ? "rgba(74,158,255,0.08)" : "rgba(10,16,24,0.6)";
+        const shadow = isActive ? "0 0 0 1px #4a9eff,0 4px 20px rgba(74,158,255,0.15)" : "none";
+        return `<button onclick="selectPost('${post.id}')" style="background:${bg};border:1px solid ${border};
+          border-radius:8px;padding:12px 10px;cursor:pointer;transition:all 0.2s;text-align:left;
+          box-shadow:${shadow};width:100%">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+            <div>
+              <div style="font-size:11px;font-weight:700;letter-spacing:0.1em;color:${pc};margin-bottom:1px">${prefix}</div>
+              <div style="font-size:15px;font-weight:700;color:#e8f0f7;font-family:'Barlow Condensed',sans-serif;
+                letter-spacing:0.04em;line-height:1.3">${name}</div>
+            </div>${radialGaugeSVG(overall,52)}
+          </div>
+          ${[["MANPOWER",mp],["LOGISTICS",lg],["AMBULANCE",amb]].map(([l,p])=>`
+            <div style="margin-bottom:4px">
+              <div style="display:flex;justify-content:space-between">
+                <span style="font-size:9px;color:#4a5a6a;letter-spacing:0.08em">${l}</span>
+                <span style="font-size:9px;color:${statusColor(p)}">${p}%</span>
+              </div>${progressBar(p)}
+            </div>`).join("")}
+        </button>`;
       }).join("");
     }
 
@@ -297,31 +324,24 @@
       const post = POSTS.find(p => p.id === activePost);
       const pd   = postData[activePost];
       const prefix = post.type === "FAP" ? "FAP(E)" : "MEDICAL POST";
-      const name   = post.label.replace(/^MP\s+|^FAP\(E\)\s+/, "");
-      const prefixColor = post.type === "FAP" ? "#a78bfa" : "#4a9eff";
-      const prefixBg    = post.type === "FAP" ? "rgba(167,139,250,0.1)" : "rgba(74,158,255,0.1)";
-
+      const pc     = post.type === "FAP" ? "#a78bfa" : "#4a9eff";
+      const pbg    = post.type === "FAP" ? "rgba(167,139,250,0.1)" : "rgba(74,158,255,0.1)";
       document.getElementById("detailHeader").innerHTML = `
         <div style="display:flex;align-items:center;gap:10px">
-          <span style="font-size:11px;font-weight:700;letter-spacing:0.1em;
-            color:${prefixColor};background:${prefixBg};padding:3px 8px;border-radius:4px">
-            ${prefix}
-          </span>
+          <span style="font-size:11px;font-weight:700;letter-spacing:0.1em;color:${pc};
+            background:${pbg};padding:3px 8px;border-radius:4px">${prefix}</span>
           <span style="font-size:20px;font-weight:700;color:#e8f0f7;
             font-family:'Syne',sans-serif;letter-spacing:0.04em">${post.label}</span>
         </div>
         <div style="font-size:12px;color:#4a6a7a">Click any post card above to switch</div>`;
-
       document.getElementById("manpowerPanel").innerHTML  = renderManpowerPanel(pd.manpower);
       document.getElementById("logisticsPanel").innerHTML = renderChecklistPanel("LOGISTICS / EQUIPMENT", pd.logistics, "logistics");
       document.getElementById("ambulancePanel").innerHTML = renderChecklistPanel("AMBULANCE", pd.ambulance, "ambulance");
     }
 
     function renderManpowerPanel(data) {
-      const pct   = calcManpowerPct(data);
-      const color = statusColor(pct);
-      return `
-        <div style="display:flex;align-items:center;gap:8px;padding-bottom:8px;
+      const pct = calcManpowerPct(data), color = statusColor(pct);
+      return `<div style="display:flex;align-items:center;gap:8px;padding-bottom:8px;
           border-bottom:1px solid #0e1c28;margin-bottom:10px">
           <span style="display:inline-block;width:10px;height:10px;border-radius:50%;
             background:${color};box-shadow:0 0 6px ${color}"></span>
@@ -329,7 +349,7 @@
             color:#8a9aaa;letter-spacing:0.1em;flex:1">MANPOWER</span>
           <span style="font-size:13px;font-weight:700;color:${color}">${pct}%</span>
         </div>
-        ${data.map((role, ri) => `
+        ${data.map((role,ri) => `
           <div style="margin-bottom:8px">
             <div style="font-size:10px;color:#4a6a7a;letter-spacing:0.08em;
               text-transform:uppercase;margin-bottom:3px">${role.role}</div>
@@ -345,26 +365,23 @@
                 <span style="font-size:11px;color:#4a5a6a">present</span>
               </div>` : `
               <div style="display:flex;flex-wrap:wrap;gap:4px">
-                ${role.names.map((person, ni) => {
-                  const bc = person.present ? "#00ff9d" : "#2e3a4a";
-                  const bg = person.present ? "rgba(0,255,157,0.15)" : "rgba(255,255,255,0.04)";
-                  const fc = person.present ? "#00ff9d" : "#6b7d8f";
+                ${role.names.map((person,ni) => {
+                  const bc = person.present?"#00ff9d":"#2e3a4a";
+                  const bg = person.present?"rgba(0,255,157,0.15)":"rgba(255,255,255,0.04)";
+                  const fc = person.present?"#00ff9d":"#6b7d8f";
                   return `<button onclick="togglePerson(${ri},${ni})"
                     style="padding:4px 8px;border-radius:4px;border:1px solid ${bc};
                     background:${bg};color:${fc};font-size:10px;cursor:pointer;
                     font-family:'IBM Plex Mono',monospace;transition:all 0.15s">
-                    ${person.name}
-                  </button>`;
+                    ${person.name}</button>`;
                 }).join("")}
               </div>`}
           </div>`).join("")}`;
     }
 
     function renderChecklistPanel(title, items, domain) {
-      const pct   = calcChecklistPct(items);
-      const color = statusColor(pct);
-      return `
-        <div style="display:flex;align-items:center;gap:8px;padding-bottom:8px;
+      const pct = calcChecklistPct(items), color = statusColor(pct);
+      return `<div style="display:flex;align-items:center;gap:8px;padding-bottom:8px;
           border-bottom:1px solid #0e1c28;margin-bottom:10px">
           <span style="display:inline-block;width:10px;height:10px;border-radius:50%;
             background:${color};box-shadow:0 0 6px ${color}"></span>
@@ -372,29 +389,26 @@
             color:#8a9aaa;letter-spacing:0.1em;flex:1">${title}</span>
           <span style="font-size:13px;font-weight:700;color:${color}">${pct}%</span>
         </div>
-        ${items.map((item, i) => {
-          const bc = item.checked ? "#00ff9d" : "#2e3a4a";
-          const bg = item.checked ? "rgba(0,255,157,0.15)" : "transparent";
-          const fc = item.checked ? "#c8d8e4" : "#5a6a7a";
-          return `
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:3px 0">
-              <input type="checkbox" ${item.checked ? "checked" : ""}
-                onchange="toggleChecklist('${domain}',${i})"
-                style="display:none" />
-              <span style="width:16px;height:16px;border:1px solid ${bc};border-radius:3px;
-                background:${bg};display:flex;align-items:center;justify-content:center;
-                flex-shrink:0;transition:all 0.15s">
-                ${item.checked ? `<span style="color:#00ff9d;font-size:9px;line-height:1">✓</span>` : ""}
-              </span>
-              <span style="font-size:11px;color:${fc}">${item.item}</span>
-            </label>`;
+        ${items.map((item,i) => {
+          const bc = item.checked?"#00ff9d":"#2e3a4a";
+          const bg = item.checked?"rgba(0,255,157,0.15)":"transparent";
+          const fc = item.checked?"#c8d8e4":"#5a6a7a";
+          return `<label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:3px 0">
+            <input type="checkbox" ${item.checked?"checked":""} onchange="toggleChecklist('${domain}',${i})"
+              style="display:none"/>
+            <span style="width:16px;height:16px;border:1px solid ${bc};border-radius:3px;
+              background:${bg};display:flex;align-items:center;justify-content:center;
+              flex-shrink:0;transition:all 0.15s">
+              ${item.checked?`<span style="color:#00ff9d;font-size:9px;line-height:1">✓</span>`:""}
+            </span>
+            <span style="font-size:11px;color:${fc}">${item.item}</span>
+          </label>`;
         }).join("")}`;
     }
 
     function renderGoLivePanel() {
       const allReady = POSTS.every(p => overallReadiness(postData[p.id]) === 100);
       const notReady = POSTS.filter(p => overallReadiness(postData[p.id]) < 100).length;
-
       document.getElementById("goLiveAssessment").innerHTML = `
         <div style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;
           color:#4a6a7a;letter-spacing:0.12em;margin-bottom:8px">COMMANDER ASSESSMENT</div>
@@ -402,120 +416,78 @@
           ${POSTS.map(post => {
             const overall = overallReadiness(postData[post.id]);
             const color   = statusColor(overall);
-            return `
-              <div style="display:flex;align-items:center;gap:6px">
-                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;
-                  background:${color};box-shadow:0 0 5px ${color}"></span>
-                <span style="font-size:12px;color:#8a9aaa">${post.label}</span>
-                <span style="font-size:11px;font-weight:700;color:${color}">${overall}%</span>
-              </div>`;
+            return `<div style="display:flex;align-items:center;gap:6px">
+              <span style="display:inline-block;width:8px;height:8px;border-radius:50%;
+                background:${color};box-shadow:0 0 5px ${color}"></span>
+              <span style="font-size:12px;color:#8a9aaa">${post.label}</span>
+              <span style="font-size:11px;font-weight:700;color:${color}">${overall}%</span>
+            </div>`;
           }).join("")}
         </div>
-        ${goLiveTime ? `
-          <div style="margin-top:8px;font-size:12px;color:#00ff9d">
-            GO LIVE declared at ${new Date(goLiveTime).toLocaleTimeString("en-SG",{hour12:false})}
-            by ${currentUser?.email || "Commander"}
-          </div>` : ""}
-        ${!allReady && !goLiveStatus ? `
-          <div style="margin-top:6px;font-size:11px;color:#ffb800">
-            ⚠ ${notReady} post(s) not yet at 100% readiness
-          </div>` : ""}`;
-
-      const btnWrap = document.getElementById("goLiveBtn");
-      if (!goLiveStatus) {
-        btnWrap.innerHTML = `<button onclick="declareGoLive()" style="
-          padding:10px 24px;background:rgba(0,255,157,0.1);border:1px solid #00ff9d;
-          border-radius:6px;color:#00ff9d;font-family:'Syne',sans-serif;font-size:13px;
-          font-weight:800;letter-spacing:0.1em;cursor:pointer">DECLARE GO LIVE</button>`;
-      } else {
-        btnWrap.innerHTML = `<button onclick="declareStandDown()" style="
-          padding:10px 24px;background:rgba(255,68,68,0.1);border:1px solid #ff4444;
-          border-radius:6px;color:#ff4444;font-family:'Syne',sans-serif;font-size:13px;
-          font-weight:800;letter-spacing:0.1em;cursor:pointer">STAND DOWN</button>`;
-      }
+        ${goLiveTime ? `<div style="margin-top:8px;font-size:12px;color:#00ff9d">
+          GO LIVE declared at ${new Date(goLiveTime).toLocaleTimeString("en-SG",{hour12:false})}
+          by ${currentUser?.label||"Commander"}</div>` : ""}
+        ${!allReady && !goLiveStatus ? `<div style="margin-top:6px;font-size:11px;color:#ffb800">
+          ⚠ ${notReady} post(s) not yet at 100% readiness</div>` : ""}`;
+      document.getElementById("goLiveBtn").innerHTML = !goLiveStatus
+        ? `<button onclick="declareGoLive()" style="padding:10px 24px;background:rgba(0,255,157,0.1);
+            border:1px solid #00ff9d;border-radius:6px;color:#00ff9d;font-family:'Syne',sans-serif;
+            font-size:13px;font-weight:800;letter-spacing:0.1em;cursor:pointer">DECLARE GO LIVE</button>`
+        : `<button onclick="declareStandDown()" style="padding:10px 24px;background:rgba(255,68,68,0.1);
+            border:1px solid #ff4444;border-radius:6px;color:#ff4444;font-family:'Syne',sans-serif;
+            font-size:13px;font-weight:800;letter-spacing:0.1em;cursor:pointer">STAND DOWN</button>`;
     }
 
     function renderGoLiveBadge() {
       const badge = document.getElementById("goLiveBadge");
       const color = goLiveStatus ? "#00ff9d" : "#ff4444";
       const bg    = goLiveStatus ? "rgba(0,255,157,0.12)" : "rgba(255,68,68,0.1)";
-      const label = goLiveStatus ? "GO LIVE" : "STANDBY";
-      badge.style.background   = bg;
-      badge.style.borderColor  = color;
-      badge.style.color        = color;
-      badge.innerHTML = `
-        <span style="width:8px;height:8px;border-radius:50%;background:${color};
-          box-shadow:0 0 8px ${color};display:inline-block;
-          animation:${goLiveStatus ? "pulse 1.5s infinite" : "none"}"></span>
-        ${label}`;
+      badge.style.cssText += `;background:${bg};border-color:${color};color:${color}`;
+      badge.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:${color};
+        box-shadow:0 0 8px ${color};display:inline-block;
+        animation:${goLiveStatus?"pulse 1.5s infinite":"none"}"></span>
+        ${goLiveStatus ? "GO LIVE" : "STANDBY"}`;
     }
 
     // ─── EVENT HANDLERS ─────────────────────────────────────────────────────
-
-    window.selectPost = (postId) => {
-      activePost = postId;
-      renderDashboard();
-    };
+    window.selectPost = (postId) => { activePost = postId; renderDashboard(); };
 
     window.togglePerson = (roleIdx, nameIdx) => {
-      const pd = postData[activePost];
-      pd.manpower[roleIdx].names[nameIdx].present = !pd.manpower[roleIdx].names[nameIdx].present;
+      postData[activePost].manpower[roleIdx].names[nameIdx].present =
+        !postData[activePost].manpower[roleIdx].names[nameIdx].present;
       savePostData(activePost);
-      renderDetailPanel();
-      renderOverviewGrid();
-      renderGoLivePanel();
+      renderDetailPanel(); renderOverviewGrid(); renderGoLivePanel();
     };
-
     window.updateAttached = (roleIdx, field, val) => {
-      const pd  = postData[activePost];
-      const num = Math.max(0, parseInt(val) || 0);
-      if (field === "count") {
-        pd.manpower[roleIdx].attachedCount = num;
-      } else {
-        pd.manpower[roleIdx].attachedPresent = Math.min(num, pd.manpower[roleIdx].attachedCount);
-      }
+      const num = Math.max(0, parseInt(val)||0);
+      const role = postData[activePost].manpower[roleIdx];
+      if (field === "count") role.attachedCount = num;
+      else role.attachedPresent = Math.min(num, role.attachedCount);
       savePostData(activePost);
-      renderOverviewGrid();
-      renderGoLivePanel();
+      renderOverviewGrid(); renderGoLivePanel();
     };
-
     window.toggleChecklist = (domain, idx) => {
       postData[activePost][domain][idx].checked = !postData[activePost][domain][idx].checked;
       savePostData(activePost);
-      renderDetailPanel();
-      renderOverviewGrid();
-      renderGoLivePanel();
+      renderDetailPanel(); renderOverviewGrid(); renderGoLivePanel();
     };
-
-    window.declareGoLive   = () => saveGoLive(true);
+    window.declareGoLive    = () => saveGoLive(true);
     window.declareStandDown = () => saveGoLive(false);
 
     // ─── CLOCK ──────────────────────────────────────────────────────────────
-
-    const inputStyle = `width:52px;background:rgba(255,255,255,0.04);border:1px solid #1e2a35;
-      border-radius:4px;color:#c8d8e4;padding:4px 6px;font-size:11px;
-      font-family:'IBM Plex Mono',monospace;outline:none`;
-
     function tickClock() {
       const now = new Date();
       const t = document.getElementById("clockTime");
       const d = document.getElementById("clockDate");
       if (t) t.textContent = now.toLocaleTimeString("en-SG", { hour12: false });
-      if (d) d.textContent = now.toLocaleDateString("en-SG", { day: "2-digit", month: "short", year: "numeric" });
+      if (d) d.textContent = now.toLocaleDateString("en-SG", { day:"2-digit", month:"short", year:"numeric" });
     }
     setInterval(tickClock, 1000);
     tickClock();
-
-    // Enter key on login
-    document.addEventListener("keydown", e => {
-      if (e.key === "Enter" && document.getElementById("loginScreen").style.display !== "none") {
-        window.doLogin();
-      }
-    });
   </script>
 
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
     body {
       background: #060d14;
       background-image:
@@ -525,260 +497,154 @@
       color: #c8d8e4;
       min-height: 100vh;
     }
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: #0a1018; }
-    ::-webkit-scrollbar-thumb { background: #1e2a35; border-radius: 2px; }
-    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+    ::-webkit-scrollbar { width:4px; }
+    ::-webkit-scrollbar-track { background:#0a1018; }
+    ::-webkit-scrollbar-thumb { background:#1e2a35; border-radius:2px; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
-    /* ── LOGIN SCREEN ── */
+    /* LOGIN */
     #loginScreen {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      gap: 0;
+      display:flex; flex-direction:column; align-items:center;
+      justify-content:center; min-height:100vh;
     }
     .login-box {
-      background: rgba(10,16,24,0.95);
-      border: 1px solid #1e2a35;
-      border-radius: 12px;
-      padding: 40px 48px;
-      width: 380px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
+      background:rgba(10,16,24,0.95); border:1px solid #1e2a35;
+      border-radius:12px; padding:40px 48px; width:400px;
+      display:flex; flex-direction:column; gap:20px;
     }
-    .login-title {
-      font-family: 'Syne', sans-serif;
-      font-size: 20px;
-      font-weight: 800;
-      color: #4a9eff;
-      letter-spacing: 0.06em;
-      text-align: center;
+    .login-logo { text-align:center; margin-bottom:4px; }
+    .login-logo-title {
+      font-family:'Syne',sans-serif; font-size:22px; font-weight:800;
+      color:#4a9eff; letter-spacing:0.06em;
     }
-    .login-sub {
-      font-size: 11px;
-      color: #4a7a9b;
-      letter-spacing: 0.12em;
-      text-align: center;
-      margin-top: -12px;
+    .login-logo-sub {
+      font-family:'IBM Plex Mono',monospace; font-size:11px;
+      color:#4a7a9b; letter-spacing:0.12em; margin-top:4px;
     }
+    .login-divider { border:none; border-top:1px solid #1e2a35; }
     .login-label {
-      font-size: 10px;
-      color: #4a6a7a;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      margin-bottom: 6px;
+      font-size:10px; color:#4a6a7a; letter-spacing:0.1em;
+      text-transform:uppercase; margin-bottom:6px;
     }
-    .login-input {
-      width: 100%;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid #1e2a35;
-      border-radius: 6px;
-      color: #c8d8e4;
-      padding: 10px 12px;
-      font-size: 13px;
-      font-family: 'IBM Plex Mono', monospace;
-      outline: none;
-      transition: border-color 0.2s;
+    .pin-input {
+      width:100%; background:rgba(255,255,255,0.04); border:1px solid #1e2a35;
+      border-radius:6px; color:#c8d8e4; padding:12px; font-size:20px;
+      font-family:'IBM Plex Mono',monospace; outline:none;
+      text-align:center; letter-spacing:0.3em; transition:border-color 0.2s;
     }
-    .login-input:focus { border-color: #4a9eff; }
+    .pin-input:focus { border-color:#4a9eff; }
     .login-btn {
-      width: 100%;
-      padding: 12px;
-      background: rgba(74,158,255,0.12);
-      border: 1px solid #4a9eff;
-      border-radius: 6px;
-      color: #4a9eff;
-      font-family: 'Syne', sans-serif;
-      font-size: 13px;
-      font-weight: 800;
-      letter-spacing: 0.1em;
-      cursor: pointer;
-      transition: background 0.2s;
+      width:100%; padding:12px; background:rgba(74,158,255,0.12);
+      border:1px solid #4a9eff; border-radius:6px; color:#4a9eff;
+      font-family:'Syne',sans-serif; font-size:13px; font-weight:800;
+      letter-spacing:0.1em; cursor:pointer; transition:background 0.2s;
     }
-    .login-btn:hover { background: rgba(74,158,255,0.22); }
-    .login-error {
-      font-size: 11px;
-      color: #ff4444;
-      text-align: center;
-      min-height: 16px;
-    }
-    .login-restrict {
-      font-size: 10px;
-      color: #2e4a5a;
-      text-align: center;
-      letter-spacing: 0.08em;
-    }
+    .login-btn:hover { background:rgba(74,158,255,0.22); }
+    .login-error { font-size:11px; color:#ff4444; text-align:center; min-height:16px; }
+    .login-restrict { font-size:10px; color:#2e4a5a; text-align:center; letter-spacing:0.08em; }
 
-    /* ── DASHBOARD ── */
+    /* DASHBOARD */
     #dashboard {
-      display: none;
-      flex-direction: column;
-      gap: 20px;
-      padding: 20px 24px;
-      min-height: 100vh;
+      display:none; flex-direction:column; gap:20px;
+      padding:20px 24px; min-height:100vh;
     }
     .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid #0e1c28;
-      padding-bottom: 16px;
+      display:flex; justify-content:space-between; align-items:center;
+      border-bottom:1px solid #0e1c28; padding-bottom:16px;
     }
-    .header-title {
-      font-family: 'Syne', sans-serif;
-      font-size: 26px;
-      font-weight: 800;
-      color: #4a9eff;
-      letter-spacing: 0.06em;
-    }
-    .header-sub {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 12px;
-      color: #4a7a9b;
-      letter-spacing: 0.12em;
-      margin-top: 2px;
-    }
-    .header-right { display: flex; align-items: center; gap: 20px; }
+    .header-right { display:flex; align-items:center; gap:20px; }
     .user-pill {
-      font-size: 10px;
-      color: #4a6a7a;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid #1e2a35;
-      border-radius: 4px;
-      padding: 4px 10px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      font-size:10px; color:#4a6a7a; background:rgba(255,255,255,0.04);
+      border:1px solid #1e2a35; border-radius:4px; padding:4px 10px;
+      display:flex; align-items:center; gap:8px;
     }
     .logout-btn {
-      font-size: 10px;
-      color: #ff6666;
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-family: 'IBM Plex Mono', monospace;
-      letter-spacing: 0.08em;
+      font-size:10px; color:#ff6666; background:none; border:none;
+      cursor:pointer; font-family:'IBM Plex Mono',monospace; letter-spacing:0.08em;
     }
     #goLiveBadge {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 16px;
-      border-radius: 6px;
-      border: 1px solid;
-      font-family: 'Syne', sans-serif;
-      font-size: 13px;
-      font-weight: 800;
-      letter-spacing: 0.12em;
+      display:flex; align-items:center; gap:8px; padding:8px 16px;
+      border-radius:6px; border:1px solid; font-family:'Syne',sans-serif;
+      font-size:13px; font-weight:800; letter-spacing:0.12em;
     }
-    .clock { text-align: right; }
     #clockTime {
-      font-family: 'Syne', sans-serif;
-      font-size: 22px;
-      font-weight: 700;
-      color: #4a9eff;
-      letter-spacing: 0.05em;
+      font-family:'Syne',sans-serif; font-size:22px; font-weight:700;
+      color:#4a9eff; letter-spacing:0.05em; text-align:right;
     }
     #clockDate {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 10px;
-      color: #4a6a7a;
-      letter-spacing: 0.1em;
+      font-family:'IBM Plex Mono',monospace; font-size:10px;
+      color:#4a6a7a; letter-spacing:0.1em; text-align:right;
     }
     #overviewGrid {
-      display: grid;
-      grid-template-columns: repeat(8, 1fr);
-      gap: 10px;
+      display:grid; grid-template-columns:repeat(8,1fr); gap:10px;
     }
     .detail-section {
-      background: rgba(8,14,22,0.8);
-      border: 1px solid #0e1c28;
-      border-radius: 10px;
-      padding: 16px 20px;
+      background:rgba(8,14,22,0.8); border:1px solid #0e1c28;
+      border-radius:10px; padding:16px 20px;
     }
     #detailHeader {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 14px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid #0e1c28;
+      display:flex; justify-content:space-between; align-items:center;
+      margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid #0e1c28;
     }
-    .detail-panels {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 14px;
-    }
+    .detail-panels { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
     .panel {
-      background: rgba(10,16,24,0.8);
-      border: 1px solid #0e1c28;
-      border-radius: 8px;
-      padding: 14px;
+      background:rgba(10,16,24,0.8); border:1px solid #0e1c28;
+      border-radius:8px; padding:14px;
     }
     .go-live-panel {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: rgba(8,14,22,0.9);
-      border: 1px solid #0e1c28;
-      border-radius: 10px;
-      padding: 16px 20px;
-      gap: 20px;
+      display:flex; align-items:center; justify-content:space-between;
+      background:rgba(8,14,22,0.9); border:1px solid #0e1c28;
+      border-radius:10px; padding:16px 20px; gap:20px;
     }
-    button { font-family: 'IBM Plex Mono', monospace; }
+    button { font-family:'IBM Plex Mono',monospace; }
   </style>
 </head>
 <body>
 
-  <!-- ── LOGIN SCREEN ─────────────────────────────────────────────────────── -->
+  <!-- LOGIN -->
   <div id="loginScreen">
     <div class="login-box">
-      <div class="login-title">MEDICAL COMMAND POST</div>
-      <div class="login-sub">READINESS COMMAND DASHBOARD &nbsp;·&nbsp; RESTRICTED, SENSITIVE (NORMAL)</div>
-
-      <div>
-        <div class="login-label">Authorised Email</div>
-        <input id="emailInput" type="email" class="login-input" placeholder="user@ndp-medical.sg" />
+      <div class="login-logo">
+        <div class="login-logo-title">MEDICAL COMMAND POST</div>
+        <div class="login-logo-sub">READINESS COMMAND DASHBOARD &nbsp;·&nbsp; RESTRICTED, SENSITIVE (NORMAL)</div>
       </div>
+      <hr class="login-divider"/>
       <div>
-        <div class="login-label">Password</div>
-        <input id="passInput" type="password" class="login-input" placeholder="••••••••" />
+        <div class="login-label">Enter Station PIN</div>
+        <input id="pinInput" type="password" class="pin-input" placeholder="••••••••••••" autocomplete="off"/>
       </div>
       <div class="login-error" id="loginError"></div>
-      <button class="login-btn" onclick="doLogin()">SIGN IN</button>
-      <div class="login-restrict">ACCESS RESTRICTED TO AUTHORISED PERSONNEL ONLY</div>
+      <button class="login-btn" onclick="doLogin()">ACCESS DASHBOARD</button>
+      <div class="login-restrict">⚠ AUTHORISED PERSONNEL ONLY — DO NOT SHARE YOUR PIN</div>
     </div>
   </div>
 
-  <!-- ── DASHBOARD ─────────────────────────────────────────────────────────── -->
+  <!-- DASHBOARD -->
   <div id="dashboard">
-
-    <!-- Header -->
     <div class="header">
       <div>
-        <div class="header-title">MEDICAL COMMAND POST</div>
-        <div class="header-sub">READINESS COMMAND DASHBOARD &nbsp;·&nbsp; RESTRICTED, SENSITIVE (NORMAL)</div>
+        <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;
+          color:#4a9eff;letter-spacing:0.06em">MEDICAL COMMAND POST</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;
+          color:#4a7a9b;letter-spacing:0.12em;margin-top:2px">
+          READINESS COMMAND DASHBOARD &nbsp;·&nbsp; RESTRICTED, SENSITIVE (NORMAL)
+        </div>
       </div>
       <div class="header-right">
         <div class="user-pill">
-          <span id="userEmail"></span>
+          <span id="userLabel"></span>
           <button class="logout-btn" onclick="doLogout()">SIGN OUT</button>
         </div>
         <div id="goLiveBadge"></div>
-        <div class="clock">
+        <div>
           <div id="clockTime"></div>
           <div id="clockDate"></div>
         </div>
       </div>
     </div>
 
-    <!-- Overview Grid -->
     <div id="overviewGrid"></div>
 
-    <!-- Detail Section -->
     <div class="detail-section">
       <div id="detailHeader"></div>
       <div class="detail-panels">
@@ -788,12 +654,11 @@
       </div>
     </div>
 
-    <!-- Go Live Panel -->
     <div class="go-live-panel">
       <div id="goLiveAssessment" style="flex:1"></div>
       <div id="goLiveBtn"></div>
     </div>
-
   </div>
+
 </body>
 </html>
