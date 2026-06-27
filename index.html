@@ -689,15 +689,6 @@
               by ${currentUser?.label||"Commander"}</div>` : ""}
             ${!allReady&&!goLiveStatus ? `<div style="margin-top:6px;font-size:11px;color:#ffb800">
               ⚠ ${notReady} unit(s) not yet at 100%</div>` : ""}
-            <div style="margin-top:10px">
-              <div style="font-size:9px;color:#3a5a6a;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px">Commander's Note</div>
-              <textarea rows="2" placeholder="e.g. VVIP not required for CR2..."
-                onchange="updateDashboardNote(this.value)"
-                style="width:100%;background:rgba(255,255,255,0.03);border:1px solid #1e2a35;
-                border-radius:4px;color:#8ab4a4;padding:6px 8px;font-size:11px;resize:none;
-                font-family:'IBM Plex Mono',monospace;outline:none;line-height:1.5"
-              >${unitData._commander?._note||""}</textarea>
-            </div>
           </div>
           <!-- Commander CR1 Readout Checklist -->
           <div style="min-width:280px">
@@ -734,6 +725,11 @@
             border:1px solid #ff4444;border-radius:6px;color:#ff4444;font-family:'Syne',sans-serif;
             font-size:12px;font-weight:800;letter-spacing:0.1em;cursor:pointer;white-space:nowrap">
             STAND DOWN</button>`;
+      // Update note textarea value without re-rendering it
+      const noteEl = document.getElementById("cmdNote");
+      if (noteEl && document.activeElement !== noteEl) {
+        noteEl.value = unitData._commander?._note || "";
+      }
     }
 
     function renderGoLiveBadge() {
@@ -951,6 +947,16 @@
     <div class="go-live-panel">
       <div id="goLiveAssessment" style="flex:1"></div>
       <div id="goLiveBtn" style="padding-top:4px"></div>
+    </div>
+
+    <!-- Commander Note — static, outside render cycle -->
+    <div style="background:rgba(8,14,22,0.9);border:1px solid #0e1c28;border-radius:8px;padding:10px 18px;display:flex;align-items:center;gap:12px">
+      <div style="font-family:'Syne',sans-serif;font-size:10px;font-weight:700;color:#4a6a7a;letter-spacing:0.12em;white-space:nowrap">COMMANDER'S NOTE</div>
+      <textarea id="cmdNote" rows="1" placeholder="e.g. VVIP not required for CR2, MP Arena stood down..."
+        oninput="updateDashboardNote(this.value)"
+        style="flex:1;background:transparent;border:none;border-bottom:1px solid #1e2a35;
+        color:#8ab4a4;padding:4px 0;font-size:11px;resize:none;overflow:hidden;
+        font-family:'IBM Plex Mono',monospace;outline:none;line-height:1.5"></textarea>
     </div>
   </div>
 
