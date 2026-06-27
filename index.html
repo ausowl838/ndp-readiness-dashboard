@@ -258,15 +258,13 @@
     // ─── COMMANDER FINAL CHECKLIST ───────────────────────────────────────────
     const COMMANDER_CHECKLIST = [
       "All medical assets accounted for",
-      "Communications green",
-      "Equipment green",
       "Evacuation routes verified",
       "Handshakes completed",
       "Ambulance movements rehearsed",
-      "Paediatric capability operational",
       "QRTs operational",
       "SBTs operational",
-      "MPs/FAPs at TTR status",
+      "MPs at TTR status",
+      "FAPs at TTR status",
     ];
 
     // ─── STATE ──────────────────────────────────────────────────────────────
@@ -277,6 +275,7 @@
     let goLiveStatus = false;
     let goLiveTime   = null;
     let loginAttempts = 0;
+    let showChecklist = true;
     const MAX_ATTEMPTS = 5;
 
     function ts() { return new Date().toLocaleTimeString("en-SG",{hour12:false}); }
@@ -673,15 +672,23 @@
           <div style="flex:1;min-width:300px">
             <div style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;
               color:#4a6a7a;letter-spacing:0.12em;margin-bottom:8px">UNIT READINESS</div>
-            <div style="display:flex;gap:12px;flex-wrap:wrap">
+            <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start">
               ${UNITS.map(unit => {
                 const overall = overallReadiness(unitData[unit.id]);
                 const color   = statusColor(overall);
-                return `<div style="display:flex;align-items:center;gap:5px">
-                  <span style="display:inline-block;width:7px;height:7px;border-radius:50%;
-                    background:${color};box-shadow:0 0 5px ${color}"></span>
-                  <span style="font-size:11px;color:#8a9aaa">${unit.label}</span>
-                  <span style="font-size:10px;font-weight:700;color:${color}">${overall}%</span>
+                const note    = unitData[unit.id]?._note || "";
+                return `<div style="display:flex;flex-direction:column;gap:3px;min-width:120px">
+                  <div style="display:flex;align-items:center;gap:5px">
+                    <span style="display:inline-block;width:7px;height:7px;border-radius:50%;
+                      background:${color};box-shadow:0 0 5px ${color}"></span>
+                    <span style="font-size:11px;color:#8a9aaa">${unit.label}</span>
+                    <span style="font-size:10px;font-weight:700;color:${color}">${overall}%</span>
+                  </div>
+                  <input type="text" value="${note}" placeholder="add note..."
+                    onchange="updateUnitNote('${unit.id}',this.value)"
+                    style="font-size:9px;color:#4a7a6a;background:rgba(255,255,255,0.03);
+                    border:none;border-bottom:1px solid #1e2a35;outline:none;width:100%;
+                    font-family:'IBM Plex Mono',monospace;padding:1px 0"/>
                 </div>`;
               }).join("")}
             </div>
@@ -695,7 +702,7 @@
           <div style="min-width:280px">
             <div style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;
               color:#4a6a7a;letter-spacing:0.12em;margin-bottom:8px">
-              COMMANDER'S CR1 READOUT
+              COMMANDER'S READOUT
               <span style="font-size:10px;font-weight:700;color:${cmdColor};margin-left:8px">${cmdPct}%</span>
             </div>
             ${cmdChecklist.map((ci,i) => {
@@ -775,8 +782,20 @@
       saveCommander();
       renderGoLivePanel();
     };
+    window.updateUnitNote = (unitId, val) => {
+      if (!unitData[unitId]) return;
+      unitData[unitId]._note = val;
+      saveUnitData(unitId);
+    };
     window.declareGoLive    = () => saveGoLive(true);
     window.declareStandDown = () => saveGoLive(false);
+    window.toggleView = () => {
+      showChecklist = !showChecklist;
+      const detailSection = document.getElementById("detailSection");
+      const toggleBtn     = document.getElementById("toggleViewBtn");
+      if (detailSection) detailSection.style.display = showChecklist ? "block" : "none";
+      if (toggleBtn) toggleBtn.textContent = showChecklist ? "HIDE CHECKLIST ▲" : "SHOW CHECKLIST ▼";
+    };
 
     // ─── CLOCK ──────────────────────────────────────────────────────────────
     function tickClock() {
@@ -885,6 +904,12 @@
           READINESS COMMAND DASHBOARD &nbsp;·&nbsp; RESTRICTED, SENSITIVE (NORMAL)</div>
       </div>
       <div class="header-right">
+        <button id="toggleViewBtn" onclick="toggleView()" style="
+          padding:6px 14px;background:rgba(74,158,255,0.08);border:1px solid #1e3a5a;
+          border-radius:5px;color:#4a7a9b;font-family:'IBM Plex Mono',monospace;
+          font-size:10px;letter-spacing:0.08em;cursor:pointer;white-space:nowrap">
+          HIDE CHECKLIST ▲
+        </button>
         <div class="user-pill">
           <span id="userLabel"></span>
           <button class="logout-btn" onclick="doLogout()">SIGN OUT</button>
@@ -913,7 +938,7 @@
     </div>
 
     <!-- Detail Panel -->
-    <div class="detail-section">
+    <div class="detail-section" id="detailSection">
       <div id="detailHeader"></div>
       <div class="detail-panels">
         <div class="panel" id="manpowerPanel"></div>
