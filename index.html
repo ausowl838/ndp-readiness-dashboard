@@ -13,8 +13,6 @@ body{background:#060d14;font-family:'IBM Plex Mono',monospace;color:#c8d8e4;min-
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:#0a1018}
 ::-webkit-scrollbar-thumb{background:#1e2a35;border-radius:2px}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
-
-/* LOGIN */
 #loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh}
 .login-box{background:rgba(10,16,24,0.95);border:1px solid #1e2a35;border-radius:12px;
   padding:40px 48px;width:400px;display:flex;flex-direction:column;gap:20px}
@@ -26,28 +24,19 @@ body{background:#060d14;font-family:'IBM Plex Mono',monospace;color:#c8d8e4;min-
   border-radius:6px;color:#4a9eff;font-family:'Syne',sans-serif;font-size:13px;
   font-weight:800;letter-spacing:0.1em;cursor:pointer}
 .login-btn:hover{background:rgba(74,158,255,0.22)}
-
-/* DASHBOARD */
 #dashboard{display:none;flex-direction:column;gap:16px;padding:18px 22px;min-height:100vh}
-.hdr{display:flex;justify-content:space-between;align-items:center;
-  border-bottom:1px solid #0e1c28;padding-bottom:14px}
+.hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #0e1c28;padding-bottom:14px}
 .hdr-right{display:flex;align-items:center;gap:14px}
-.user-pill{font-size:10px;color:#4a6a7a;background:rgba(255,255,255,0.04);
-  border:1px solid #1e2a35;border-radius:4px;padding:4px 10px;
-  display:flex;align-items:center;gap:8px}
-.sign-out-btn{font-size:10px;color:#ff6666;background:none;border:none;
-  cursor:pointer;font-family:'IBM Plex Mono',monospace}
+.user-pill{font-size:10px;color:#4a6a7a;background:rgba(255,255,255,0.04);border:1px solid #1e2a35;
+  border-radius:4px;padding:4px 10px;display:flex;align-items:center;gap:8px}
+.sign-out-btn{font-size:10px;color:#ff6666;background:none;border:none;cursor:pointer;font-family:'IBM Plex Mono',monospace}
 .toggle-btn{padding:5px 12px;background:rgba(74,158,255,0.06);border:1px solid #1e3a5a;
-  border-radius:4px;color:#4a7a9b;font-family:'IBM Plex Mono',monospace;
-  font-size:10px;letter-spacing:0.08em;cursor:pointer;white-space:nowrap}
+  border-radius:4px;color:#4a7a9b;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.08em;cursor:pointer;white-space:nowrap}
 #goLiveBadge{display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:6px;
   border:1px solid;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;letter-spacing:0.12em}
-#clockTime{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:#4a9eff;
-  letter-spacing:0.05em;text-align:right}
-#clockDate{font-family:'IBM Plex Mono',monospace;font-size:10px;color:#4a6a7a;
-  letter-spacing:0.1em;text-align:right}
-.row-label{font-size:10px;color:#2e4a5a;letter-spacing:0.12em;font-weight:700;
-  text-transform:uppercase;margin-bottom:6px}
+#clockTime{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:#4a9eff;letter-spacing:0.05em;text-align:right}
+#clockDate{font-family:'IBM Plex Mono',monospace;font-size:10px;color:#4a6a7a;letter-spacing:0.1em;text-align:right}
+.row-label{font-size:10px;color:#2e4a5a;letter-spacing:0.12em;font-weight:700;text-transform:uppercase;margin-bottom:6px}
 .grid-5{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
 .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
@@ -55,31 +44,24 @@ body{background:#060d14;font-family:'IBM Plex Mono',monospace;color:#c8d8e4;min-
   padding:10px 9px;cursor:pointer;text-align:left;transition:all 0.2s;width:100%}
 .unit-card.active{border-color:#4a9eff;background:rgba(74,158,255,0.08);
   box-shadow:0 0 0 1px #4a9eff,0 4px 20px rgba(74,158,255,0.15)}
-.detail-section{background:rgba(8,14,22,0.8);border:1px solid #0e1c28;
-  border-radius:10px;padding:14px 18px}
-.detail-panels{display:grid;grid-template-columns:1fr 2fr;gap:12px}
+.detail-section{background:rgba(8,14,22,0.8);border:1px solid #0e1c28;border-radius:10px;padding:14px 18px}
 .panel{background:rgba(10,16,24,0.8);border:1px solid #0e1c28;border-radius:8px;padding:12px}
-.panel-hdr{display:flex;align-items:center;gap:8px;padding-bottom:8px;
-  border-bottom:1px solid #0e1c28;margin-bottom:10px}
-.panel-title{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;
-  color:#8a9aaa;letter-spacing:0.1em;flex:1}
+.panel-hdr{display:flex;align-items:center;gap:8px;padding-bottom:8px;border-bottom:1px solid #0e1c28;margin-bottom:10px}
+.panel-title{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:#8a9aaa;letter-spacing:0.1em;flex:1}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;flex-shrink:0}
-.bottom-panel{background:rgba(8,14,22,0.9);border:1px solid #0e1c28;
-  border-radius:10px;padding:14px 18px}
+.bottom-panel{background:rgba(8,14,22,0.9);border:1px solid #0e1c28;border-radius:10px;padding:14px 18px}
 .cat-label{font-size:9px;color:#3a5a6a;letter-spacing:0.1em;text-transform:uppercase;
-  font-weight:700;margin-bottom:5px;padding-bottom:3px;border-bottom:1px solid #0d1e2a}
+  font-weight:700;margin-bottom:5px;padding-bottom:3px;border-bottom:1px solid #0d1e2a;display:none}
 button{font-family:'IBM Plex Mono',monospace}
-input[type=number]{appearance:none;-moz-appearance:textfield}
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
 <div id="loginScreen">
   <div class="login-box">
     <div>
       <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#4a9eff;letter-spacing:0.06em;text-align:center">MEDICAL COMMAND POST</div>
-      <div style="font-size:11px;color:#4a7a9b;letter-spacing:0.1em;text-align:center;margin-top:4px">READINESS COMMAND DASHBOARD · RESTRICTED</div>
+      <div style="font-size:11px;color:#4a7a9b;letter-spacing:0.1em;text-align:center;margin-top:4px">READINESS COMMAND DASHBOARD · RESTRICTED, SENSITIVE (NORMAL)</div>
     </div>
     <hr style="border:none;border-top:1px solid #1e2a35"/>
     <div>
@@ -88,11 +70,10 @@ input[type=number]{appearance:none;-moz-appearance:textfield}
     </div>
     <div id="loginError" style="font-size:11px;color:#ff4444;text-align:center;min-height:16px"></div>
     <button class="login-btn" onclick="doLogin()">ACCESS DASHBOARD</button>
-    <div style="font-size:10px;color:#2e4a5a;text-align:center;letter-spacing:0.08em">⚠ AUTHORISED PERSONNEL ONLY</div>
+    <div style="font-size:10px;color:#2e4a5a;text-align:center;letter-spacing:0.08em">⚠ AUTHORISED PERSONNEL ONLY — DO NOT SHARE YOUR PIN</div>
   </div>
 </div>
 
-<!-- DASHBOARD -->
 <div id="dashboard">
   <div class="hdr">
     <div>
@@ -107,22 +88,13 @@ input[type=number]{appearance:none;-moz-appearance:textfield}
     </div>
   </div>
 
-  <div>
-    <div class="row-label">▸ Medical Posts</div>
-    <div class="grid-5" id="row0"></div>
-  </div>
-  <div>
-    <div class="row-label">▸ First Aid Posts</div>
-    <div class="grid-3" id="row1"></div>
-  </div>
-  <div>
-    <div class="row-label">▸ Specialist Units</div>
-    <div class="grid-4" id="row2"></div>
-  </div>
+  <div><div class="row-label">▸ Medical Posts</div><div class="grid-5" id="row0"></div></div>
+  <div><div class="row-label">▸ First Aid Posts</div><div class="grid-3" id="row1"></div></div>
+  <div><div class="row-label">▸ Specialist Units</div><div class="grid-4" id="row2"></div></div>
 
   <div class="detail-section" id="detailSection">
     <div id="detailHdr" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #0e1c28"></div>
-    <div id="detailPanels" class="detail-panels"></div>
+    <div id="detailPanels" style="display:grid;gap:12px"></div>
   </div>
 
   <div class="bottom-panel">
@@ -135,8 +107,7 @@ input[type=number]{appearance:none;-moz-appearance:textfield}
       </div>
       <div style="min-width:240px">
         <div style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:#4a6a7a;letter-spacing:0.12em;margin-bottom:8px">
-          COMMANDER'S READOUT
-          <span id="cmdPct" style="font-size:10px;font-weight:700;margin-left:8px"></span>
+          COMMANDER'S READOUT <span id="cmdPct" style="font-size:10px;font-weight:700;margin-left:8px"></span>
         </div>
         <div id="cmdChecklist"></div>
       </div>
@@ -145,8 +116,7 @@ input[type=number]{appearance:none;-moz-appearance:textfield}
       <div style="font-family:'Syne',sans-serif;font-size:10px;font-weight:700;color:#4a6a7a;letter-spacing:0.12em;white-space:nowrap">COMMANDER'S NOTE</div>
       <textarea id="cmdNote" rows="1" placeholder="e.g. VVIP not required for CR2..."
         style="flex:1;background:transparent;border:none;border-bottom:1px solid #1e2a35;
-        color:#8ab4a4;padding:4px 0;font-size:11px;resize:none;font-family:'IBM Plex Mono',monospace;
-        outline:none;line-height:1.5"></textarea>
+        color:#8ab4a4;padding:4px 0;font-size:11px;resize:none;font-family:'IBM Plex Mono',monospace;outline:none;line-height:1.5"></textarea>
       <div id="goLiveBtn"></div>
     </div>
   </div>
@@ -167,7 +137,7 @@ const firebaseConfig = {
 };
 const db = getDatabase(initializeApp(firebaseConfig));
 
-// ── PIN MAP ──────────────────────────────────────────────────────────────────
+// ── PINS ─────────────────────────────────────────────────────────────────────
 const PIN_MAP = {
   "cp1@Ndp2026":   {label:"CP1 (Commander)",       role:"commander"},
   "cp2@Ndp2026":   {label:"CP2 (Commander)",       role:"commander"},
@@ -184,7 +154,6 @@ const PIN_MAP = {
   "sbt@Ndp2026":   {label:"Stretcher Bearer Team", role:"unit",unitId:"SBT"},
   "cp5@Ndp2026":   {label:"Amb Reserve (CP5)",     role:"unit",unitId:"CP5"},
 };
-
 async function hashPin(pin) {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(pin));
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
@@ -192,7 +161,7 @@ async function hashPin(pin) {
 const HASHED = {};
 await Promise.all(Object.keys(PIN_MAP).map(async p => { HASHED[await hashPin(p)] = PIN_MAP[p]; }));
 
-// ── UNIT DEFINITIONS ─────────────────────────────────────────────────────────
+// ── UNITS ─────────────────────────────────────────────────────────────────────
 const UNITS = [
   {id:"MP1",  label:"MP North",             prefix:"MP",     type:"MP",   row:0},
   {id:"MP2",  label:"MP South",             prefix:"MP",     type:"MP",   row:0},
@@ -207,7 +176,319 @@ const UNITS = [
   {id:"SBT",  label:"Stretcher Bearer",     prefix:"",       type:"SPEC", row:2},
   {id:"CP5",  label:"Amb Reserve CP5",      prefix:"",       type:"SPEC", row:2},
 ];
-
 const SPEC_IDS = ["PAED","QRT","SBT","CP5"];
 
+// ── CHECKLISTS (category headers only) ───────────────────────────────────────
+const LISTS = {
+  MP_LOG:  ["Personnel","Communications","Infrastructure & Route","Clinical Readiness","Operational Readiness"],
+  MP_AMB:  ["Vehicle","Equipment","Operational"],
+  FAP_LOG: ["Personnel","Communications","Infrastructure","Clinical Readiness","Operational Readiness"],
+  FAP_AMB: ["Vehicle","Equipment","Operational"],
+  PAED:    ["Personnel","Deployment","Clinical Readiness","Integration","Evacuation Readiness"],
+  QRT:     ["Personnel","Communications","Vehicle & Stores","Route Validation","Deployment-Specific"],
+  SBT:     ["Personnel","Communications","Route Validation","Equipment","Integration","Readiness"],
+  CP5:     ["Personnel","Vehicle Readiness","Clinical Stores","Route Readiness","Operational Readiness"],
+};
+const CMD_LIST = [
+  "All medical assets accounted and operational",
+  "Equipment readiness confirmed",
+  "Ambulance readiness confirmed",
+  "Ambulance movements rehearsed",
+  "Evacuation routes verified",
+  "Communications readiness confirmed",
+  "Handshakes completed",
+];
+function mkList(keys) { return keys.map(k=>({i:k,checked:false,ts:null})); }
 
+// ── STATE ─────────────────────────────────────────────────────────────────────
+function buildBlank() {
+  const s = {};
+  UNITS.forEach(u => {
+    if (SPEC_IDS.includes(u.id)) {
+      s[u.id] = {checklist: mkList(LISTS[u.id])};
+    } else if (u.type==="MP") {
+      s[u.id] = {logistics: mkList(LISTS.MP_LOG), ambulance: mkList(LISTS.MP_AMB)};
+    } else {
+      s[u.id] = {logistics: mkList(LISTS.FAP_LOG), ambulance: mkList(LISTS.FAP_AMB)};
+    }
+  });
+  s._cmd = {checklist: mkList(CMD_LIST), note:""};
+  return s;
+}
+let state = buildBlank();
+let user  = null;
+let activeUnit = "MP1";
+let showDetail = true;
+let goLive = false;
+let goLiveTs = null;
+let loginAttempts = 0;
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function listPct(list) {
+  if (!list||!list.length) return 0;
+  const checked = list.filter(x=>x.checked).length;
+  return Math.round((checked/list.length)*100);
+}
+function unitOverall(ud, uid) {
+  if (!ud) return 0;
+  if (SPEC_IDS.includes(uid)) return listPct(ud.checklist);
+  return Math.round((listPct(ud.logistics)+listPct(ud.ambulance))/2);
+}
+function sc(p) { return p===100?"#00ff9d":p>=70?"#ffb800":"#ff4444"; }
+function nowTs() { return new Date().toLocaleTimeString("en-SG",{hour12:false}); }
+
+// ── FIREBASE ─────────────────────────────────────────────────────────────────
+function fbListen() {
+  onValue(ref(db,"r4"), snap => {
+    const val = snap.val();
+    if (!val) { render(); return; }
+    if (val.units) {
+      UNITS.forEach(u => {
+        const fb = val.units[u.id];
+        if (!fb) return;
+        const s = state[u.id];
+        if (fb.logistics && s.logistics) s.logistics = fb.logistics;
+        if (fb.ambulance && s.ambulance) s.ambulance = fb.ambulance;
+        if (fb.checklist && s.checklist) s.checklist = fb.checklist;
+      });
+    }
+    if (val._cmd) {
+      if (val._cmd.checklist) state._cmd.checklist = val._cmd.checklist;
+      if (val._cmd.note !== undefined) {
+        state._cmd.note = val._cmd.note;
+        const el = document.getElementById("cmdNote");
+        if (el && document.activeElement !== el) el.value = val._cmd.note;
+      }
+    }
+    if (val.goLive) { goLive=val.goLive.active||false; goLiveTs=val.goLive.time||null; }
+    render();
+  }, err => { console.warn("FB:", err.message); render(); });
+}
+function fbSave(uid) {
+  const s = state[uid], p = {};
+  if (s.logistics) p.logistics = s.logistics;
+  if (s.ambulance) p.ambulance = s.ambulance;
+  if (s.checklist) p.checklist = s.checklist;
+  update(ref(db,`r4/units/${uid}`), p);
+}
+function fbSaveCmd() { update(ref(db,"r4/_cmd"), state._cmd); }
+function fbGoLive(active) {
+  goLive=active; goLiveTs=active?new Date().toISOString():null;
+  set(ref(db,"r4/goLive"),{active,time:goLiveTs,by:user?.label||"Commander"});
+  renderBottom(); renderBadge();
+}
+
+// ── AUTH ──────────────────────────────────────────────────────────────────────
+window.doLogin = async () => {
+  if (loginAttempts>=5) { document.getElementById("loginError").textContent="Too many attempts. Refresh."; return; }
+  const pin = document.getElementById("pinInput").value.trim();
+  const err = document.getElementById("loginError");
+  err.textContent="";
+  if (!pin) { err.textContent="Please enter your PIN."; return; }
+  const h = await hashPin(pin);
+  const u = HASHED[h];
+  if (!u) {
+    loginAttempts++;
+    err.textContent = loginAttempts<5 ? `Invalid PIN. ${5-loginAttempts} attempt(s) left.` : "Too many attempts. Refresh.";
+    document.getElementById("pinInput").value="";
+    return;
+  }
+  user=u; loginAttempts=0;
+  sessionStorage.setItem("ndp_u4", JSON.stringify(u));
+  if (u.role==="unit") activeUnit=u.unitId;
+  launch();
+};
+window.doLogout = () => {
+  sessionStorage.removeItem("ndp_u4"); user=null;
+  document.getElementById("loginScreen").style.display="flex";
+  document.getElementById("dashboard").style.display="none";
+  document.getElementById("pinInput").value="";
+  document.getElementById("loginError").textContent="";
+};
+function launch() {
+  document.getElementById("loginScreen").style.display="none";
+  document.getElementById("dashboard").style.display="flex";
+  document.getElementById("userLabel").textContent=user.label;
+  state=buildBlank(); render(); fbListen();
+}
+const saved = sessionStorage.getItem("ndp_u4");
+if (saved) { user=JSON.parse(saved); if(user.role==="unit") activeUnit=user.unitId; launch(); }
+document.addEventListener("keydown", e => {
+  if (e.key==="Enter" && document.getElementById("loginScreen").style.display!=="none") doLogin();
+});
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function render() { renderCards(); renderDetail(); renderBottom(); renderBadge(); }
+
+function svgGauge(p, size=48) {
+  const r=(size-8)/2, c=2*Math.PI*r, stroke=(p/100)*c, color=sc(p);
+  return `<svg width="${size}" height="${size}" style="transform:rotate(-90deg)">
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="#1e2530" stroke-width="5"/>
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="5"
+      stroke-dasharray="${stroke} ${c}" stroke-linecap="round" style="filter:drop-shadow(0 0 4px ${color})"/>
+    <text x="${size/2}" y="${size/2}" text-anchor="middle" dominant-baseline="central"
+      style="transform:rotate(90deg);transform-origin:${size/2}px ${size/2}px;
+      fill:${color};font-size:10px;font-family:'IBM Plex Mono',monospace;font-weight:600">${p}%</text>
+  </svg>`;
+}
+function pBar(p) {
+  const c=sc(p);
+  return `<div style="height:3px;background:#1a2530;border-radius:2px;margin-top:2px">
+    <div style="height:100%;border-radius:2px;width:${p}%;background:${c};box-shadow:0 0 4px ${c};transition:width 0.3s"></div></div>`;
+}
+
+function renderCards() {
+  [0,1,2].forEach(row => {
+    const el = document.getElementById(`row${row}`);
+    if (!el) return;
+    el.innerHTML = UNITS.filter(u=>u.row===row).map(u => {
+      const ud=state[u.id], ov=unitOverall(ud,u.id);
+      const isSpec=SPEC_IDS.includes(u.id), isActive=activeUnit===u.id;
+      const pc=u.type==="FAP"?"#a78bfa":u.type==="SPEC"?"#f59e0b":"#4a9eff";
+      const prefix=u.prefix||u.type;
+      const name=u.label.replace(/^MP\s+|^FAP\(E\)\s+/,"");
+      let bars="";
+      if (isSpec) {
+        const cp=listPct(ud.checklist);
+        bars=`<div style="margin-top:6px"><div style="display:flex;justify-content:space-between">
+          <span style="font-size:9px;color:#4a5a6a;letter-spacing:0.07em">READINESS</span>
+          <span style="font-size:9px;color:${sc(cp)}">${cp}%</span></div>${pBar(cp)}</div>`;
+      } else {
+        const lg=listPct(ud.logistics), amb=listPct(ud.ambulance);
+        bars=[["LOGISTICS",lg],["AMBULANCE",amb]].map(([l,p])=>`
+          <div style="margin-bottom:3px"><div style="display:flex;justify-content:space-between">
+            <span style="font-size:9px;color:#4a5a6a;letter-spacing:0.07em">${l}</span>
+            <span style="font-size:9px;color:${sc(p)}">${p}%</span></div>${pBar(p)}</div>`).join("");
+      }
+      return `<button class="unit-card${isActive?" active":""}" onclick="selUnit('${u.id}')">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+          <div>
+            <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;color:${pc};margin-bottom:1px">${prefix}</div>
+            <div style="font-size:14px;font-weight:700;color:#e8f0f7;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.04em;line-height:1.2">${name}</div>
+          </div>${svgGauge(ov)}
+        </div>${bars}
+      </button>`;
+    }).join("");
+  });
+}
+
+function renderChecklist(title, items, domain, uid) {
+  if (!items) return "";
+  const p=listPct(items), color=sc(p);
+  return `<div class="panel-hdr">
+    <span class="dot" style="background:${color};box-shadow:0 0 6px ${color}"></span>
+    <span class="panel-title">${title}</span>
+    <span style="font-size:13px;font-weight:700;color:${color}">${p}%</span>
+  </div>
+  ${items.map((item,i)=>{
+    const bc=item.checked?"#00ff9d":"#2e3a4a";
+    const bg=item.checked?"rgba(0,255,157,0.15)":"transparent";
+    const fc=item.checked?"#c8d8e4":"#5a6a7a";
+    const tsL=item.ts?`<span style="font-size:9px;color:#3a6a5a;margin-left:auto;flex-shrink:0">${item.ts}</span>`:"";
+    return `<label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 0">
+      <input type="checkbox" ${item.checked?"checked":""} onchange="tickItem('${uid}','${domain}',${i})" style="display:none"/>
+      <span style="width:15px;height:15px;border:1px solid ${bc};border-radius:3px;background:${bg};
+        display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s">
+        ${item.checked?`<span style="color:#00ff9d;font-size:9px">✓</span>`:""}
+      </span>
+      <span style="font-size:12px;color:${fc};flex:1">${item.i}</span>${tsL}
+    </label>`;
+  }).join("")}`;
+}
+
+function renderDetail() {
+  const unit=UNITS.find(u=>u.id===activeUnit), ud=state[activeUnit];
+  if (!unit||!ud) return;
+  const pc=unit.type==="FAP"?"#a78bfa":unit.type==="SPEC"?"#f59e0b":"#4a9eff";
+  const pbg=unit.type==="FAP"?"rgba(167,139,250,0.1)":unit.type==="SPEC"?"rgba(245,158,11,0.1)":"rgba(74,158,255,0.1)";
+  const tLabel=unit.type==="FAP"?"FAP(E)":unit.type==="SPEC"?"SPECIALIST":"MEDICAL POST";
+  document.getElementById("detailHdr").innerHTML=`
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:11px;font-weight:700;letter-spacing:0.1em;color:${pc};background:${pbg};padding:3px 8px;border-radius:4px">${tLabel}</span>
+      <span style="font-size:20px;font-weight:700;color:#e8f0f7;font-family:'Syne',sans-serif;letter-spacing:0.04em">${unit.label}</span>
+    </div>
+    <div style="font-size:11px;color:#4a6a7a">Click any card above to switch</div>`;
+  const dp=document.getElementById("detailPanels");
+  if (SPEC_IDS.includes(activeUnit)) {
+    dp.style.gridTemplateColumns="1fr";
+    dp.innerHTML=`<div class="panel">${renderChecklist("READINESS",ud.checklist,"checklist",activeUnit)}</div>`;
+  } else {
+    dp.style.gridTemplateColumns="1fr 1fr";
+    dp.innerHTML=`
+      <div class="panel">${renderChecklist("LOGISTICS / EQUIPMENT",ud.logistics,"logistics",activeUnit)}</div>
+      <div class="panel">${renderChecklist("AMBULANCE",ud.ambulance,"ambulance",activeUnit)}</div>`;
+  }
+}
+
+function renderBottom() {
+  document.getElementById("unitReadiness").innerHTML=UNITS.map(u=>{
+    const ov=unitOverall(state[u.id],u.id), color=sc(ov);
+    return `<div style="display:flex;align-items:center;gap:5px">
+      <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${color};box-shadow:0 0 5px ${color}"></span>
+      <span style="font-size:11px;color:#8a9aaa">${u.label}</span>
+      <span style="font-size:10px;font-weight:700;color:${color}">${ov}%</span>
+    </div>`;
+  }).join("");
+  const notReady=UNITS.filter(u=>unitOverall(state[u.id],u.id)<100).length;
+  document.getElementById("readinessStatus").innerHTML=notReady>0&&!goLive
+    ?`<span style="color:#ffb800">⚠ ${notReady} unit(s) not yet at 100%</span>`:"";
+  document.getElementById("goLiveTime").textContent=goLive&&goLiveTs
+    ?`GO LIVE declared at ${new Date(goLiveTs).toLocaleTimeString("en-SG",{hour12:false})} by ${user?.label||"Commander"}`:"";
+  const cmdList=state._cmd.checklist||[], cp=listPct(cmdList);
+  document.getElementById("cmdPct").textContent=`${cp}%`;
+  document.getElementById("cmdPct").style.color=sc(cp);
+  document.getElementById("cmdChecklist").innerHTML=cmdList.map((ci,i)=>{
+    const bc=ci.checked?"#00ff9d":"#2e3a4a", bg=ci.checked?"rgba(0,255,157,0.15)":"transparent", fc=ci.checked?"#c8d8e4":"#5a6a7a";
+    const tsL=ci.ts?`<span style="font-size:9px;color:#3a6a5a;margin-left:auto">${ci.ts}</span>`:"";
+    return `<label style="display:flex;align-items:center;gap:7px;cursor:pointer;padding:2px 0">
+      <input type="checkbox" ${ci.checked?"checked":""} onchange="tickCmd(${i})" style="display:none"/>
+      <span style="width:14px;height:14px;border:1px solid ${bc};border-radius:3px;background:${bg};
+        display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s">
+        ${ci.checked?`<span style="color:#00ff9d;font-size:8px">✓</span>`:""}
+      </span>
+      <span style="font-size:11px;color:${fc};flex:1">${ci.i}</span>${tsL}
+    </label>`;
+  }).join("");
+  document.getElementById("goLiveBtn").innerHTML=goLive
+    ?`<button onclick="fbGoLive(false)" style="padding:9px 18px;background:rgba(255,68,68,0.1);border:1px solid #ff4444;border-radius:6px;color:#ff4444;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;letter-spacing:0.1em;cursor:pointer;white-space:nowrap">STAND DOWN</button>`
+    :`<button onclick="fbGoLive(true)" style="padding:9px 18px;background:rgba(0,255,157,0.1);border:1px solid #00ff9d;border-radius:6px;color:#00ff9d;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;letter-spacing:0.1em;cursor:pointer;white-space:nowrap">DECLARE GO LIVE</button>`;
+}
+
+function renderBadge() {
+  const badge=document.getElementById("goLiveBadge");
+  const color=goLive?"#00ff9d":"#ff4444", bg=goLive?"rgba(0,255,157,0.12)":"rgba(255,68,68,0.1)";
+  badge.style.cssText=`display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:6px;border:1px solid ${color};font-family:'Syne',sans-serif;font-size:12px;font-weight:800;letter-spacing:0.12em;background:${bg};color:${color}`;
+  badge.innerHTML=`<span style="width:8px;height:8px;border-radius:50%;background:${color};box-shadow:0 0 8px ${color};display:inline-block;animation:${goLive?"pulse 1.5s infinite":"none"}"></span>${goLive?"GO LIVE":"STANDBY"}`;
+}
+
+// ── EVENTS ───────────────────────────────────────────────────────────────────
+window.selUnit = id => { activeUnit=id; renderCards(); renderDetail(); };
+window.tickItem = (uid, domain, idx) => {
+  const item=state[uid][domain][idx];
+  item.checked=!item.checked; item.ts=item.checked?nowTs():null;
+  fbSave(uid); renderCards(); renderDetail(); renderBottom();
+};
+window.tickCmd = i => {
+  const ci=state._cmd.checklist[i];
+  ci.checked=!ci.checked; ci.ts=ci.checked?nowTs():null;
+  fbSaveCmd(); renderBottom();
+};
+window.toggleDetail = () => {
+  showDetail=!showDetail;
+  document.getElementById("detailSection").style.display=showDetail?"block":"none";
+  document.getElementById("toggleBtn").textContent=showDetail?"HIDE CHECKLIST ▲":"SHOW CHECKLIST ▼";
+};
+document.getElementById("cmdNote").addEventListener("input", e => {
+  state._cmd.note=e.target.value; fbSaveCmd();
+});
+
+// ── CLOCK ─────────────────────────────────────────────────────────────────────
+function tick() {
+  const now=new Date();
+  document.getElementById("clockTime").textContent=now.toLocaleTimeString("en-SG",{hour12:false});
+  document.getElementById("clockDate").textContent=now.toLocaleDateString("en-SG",{day:"2-digit",month:"short",year:"numeric"});
+}
+setInterval(tick,1000); tick();
+</script>
+</body>
+</html>
