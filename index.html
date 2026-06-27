@@ -62,7 +62,7 @@
       { id:"FAP1", label:"FAP(E) Show",          prefix:"FAP(E)",type:"FAP",  row:1 },
       { id:"FAP2", label:"FAP(E) Beneficiaries", prefix:"FAP(E)",type:"FAP",  row:1 },
       { id:"FAP3", label:"FAP(E) Celebrations",  prefix:"FAP(E)",type:"FAP",  row:1 },
-      { id:"PAED", label:"Paediatric Team",      prefix:"",      type:"SPEC", row:1 },
+      { id:"PAED", label:"Paediatric Team",      prefix:"",      type:"SPEC", row:2 },
       { id:"QRT",  label:"QRT (1-4)",            prefix:"",      type:"SPEC", row:2 },
       { id:"SBT",  label:"Stretcher Bearer",     prefix:"",      type:"SPEC", row:2 },
       { id:"CP5",  label:"Amb Reserve CP5",      prefix:"",      type:"SPEC", row:2 },
@@ -331,6 +331,7 @@
 
     // ─── CALCULATIONS ───────────────────────────────────────────────────────
     function calcManpowerPct(data) {
+      if (!data || !data.length) return 100;
       const mandatory = data.filter(r => r.required > 0);
       if (!mandatory.length) return 100;
       const totalReq  = mandatory.reduce((s,r) => s+r.required, 0);
@@ -366,7 +367,7 @@
             if (val.units[u.id]) {
               // Deep merge: preserve blank structure, overlay Firebase values
               const fb = val.units[u.id];
-              if (fb.manpower) {
+              if (fb.manpower && !isSpecUnit(u.id)) {
                 fb.manpower.forEach((fr, i) => {
                   if (unitData[u.id].manpower[i]) {
                     unitData[u.id].manpower[i].names = fr.names || unitData[u.id].manpower[i].names;
@@ -866,7 +867,7 @@
     .row-label{font-size:10px;color:#2e4a5a;letter-spacing:0.12em;font-weight:700;
       text-transform:uppercase;margin-bottom:6px}
     #row0Grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
-    #row1Grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+    #row1Grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
     #row2Grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
     .detail-section{background:rgba(8,14,22,0.8);border:1px solid #0e1c28;border-radius:10px;padding:14px 18px}
     #detailHeader{display:flex;justify-content:space-between;align-items:center;
@@ -938,7 +939,7 @@
 
     <!-- Row 1: FAPs + Paediatric -->
     <div>
-      <div class="row-label">▸ First Aid Posts &amp; Paediatric Team</div>
+      <div class="row-label">▸ First Aid Posts</div>
       <div id="row1Grid"></div>
     </div>
 
