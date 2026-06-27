@@ -298,7 +298,7 @@
         const manTmpl = MANPOWER_TEMPLATE[tmpl.man];
         if (!manTmpl) { console.warn("No manpower template:", tmpl.man, "for unit:", unit.id); return; }
         state[unit.id] = {
-          manpower: manTmpl.map((r,i) => ({
+          manpower: isSpecUnit(unit.id) ? [] : manTmpl.map((r,i) => ({
             id:i, role:r.role, required:r.required,
             names: r.required > 0
               ? Array(r.required).fill(null).map((_,j) => ({
@@ -341,8 +341,12 @@
       if (!list||!list.length) return 0;
       return Math.round((list.filter(i=>i.checked).length/list.length)*100);
     }
-    function overallReadiness(ud) {
+    function isSpecUnit(unitId) {
+      return ["PAED","QRT","SBT","CP5"].includes(unitId);
+    }
+    function overallReadiness(ud, unitId) {
       if (!ud) return 0;
+      if (isSpecUnit(unitId)) return calcChecklistPct(ud.checklist);
       const mp = calcManpowerPct(ud.manpower);
       if (ud.checklist) return Math.round((mp + calcChecklistPct(ud.checklist))/2);
       const lg = calcChecklistPct(ud.logistics), amb = calcChecklistPct(ud.ambulance);
@@ -500,7 +504,8 @@
 
       const ud_ = unitData[unit.id];
       const mp = calcManpowerPct(ud_.manpower);
-      let bars = `<div style="margin-bottom:3px">
+      const isSpec = isSpecUnit(unit.id);
+      let bars = isSpec ? "" : `<div style="margin-bottom:3px">
         <div style="display:flex;justify-content:space-between">
           <span style="font-size:9px;color:#4a5a6a;letter-spacing:0.07em">MANPOWER</span>
           <span style="font-size:9px;color:${statusColor(mp)}">${mp}%</span>
@@ -509,7 +514,7 @@
         const cp = calcChecklistPct(ud_.checklist);
         bars += `<div style="margin-bottom:3px">
           <div style="display:flex;justify-content:space-between">
-            <span style="font-size:9px;color:#4a5a6a;letter-spacing:0.07em">CHECKLIST</span>
+            <span style="font-size:9px;color:#4a5a6a;letter-spacing:0.07em">READINESS</span>
             <span style="font-size:9px;color:${statusColor(cp)}">${cp}%</span>
           </div>${progressBar(cp)}</div>`;
       } else {
@@ -566,17 +571,27 @@
         </div>
         <div style="font-size:11px;color:#4a6a7a">Click any card above to switch</div>`;
 
-      mp.innerHTML = renderManpowerPanel(ud.manpower, activeUnit);
-
-      if (ud.checklist) {
+      if (isSpecUnit(activeUnit)) {
+        mp.innerHTML = "";
+        mp.style.display = "none";
+        cp.style.gridColumn = "span 2";
         cp.innerHTML = `
           <div class="panel" style="grid-column:span 2">
-            ${renderChecklistPanel("CHECKLIST", ud.checklist, "checklist", activeUnit)}
+            ${renderChecklistPanel("READINESS", ud.checklist, "checklist", activeUnit)}
           </div>`;
       } else {
-        cp.innerHTML = `
-          <div class="panel">${renderChecklistPanel("LOGISTICS / EQUIPMENT", ud.logistics, "logistics", activeUnit)}</div>
-          <div class="panel">${renderChecklistPanel("AMBULANCE", ud.ambulance, "ambulance", activeUnit)}</div>`;
+        mp.style.display = "";
+        mp.innerHTML = renderManpowerPanel(ud.manpower, activeUnit);
+        if (ud.checklist) {
+          cp.innerHTML = `
+            <div class="panel" style="grid-column:span 2">
+              ${renderChecklistPanel("CHECKLIST", ud.checklist, "checklist", activeUnit)}
+            </div>`;
+        } else {
+          cp.innerHTML = `
+            <div class="panel">${renderChecklistPanel("LOGISTICS / EQUIPMENT", ud.logistics, "logistics", activeUnit)}</div>
+            <div class="panel">${renderChecklistPanel("AMBULANCE", ud.ambulance, "ambulance", activeUnit)}</div>`;
+        }
       }
     }
 
@@ -659,8 +674,8 @@
       const ga = document.getElementById("goLiveAssessment");
       const gb = document.getElementById("goLiveBtn");
       if (!ga || !gb) return;
-      const allReady = UNITS.every(u => overallReadiness(unitData[u.id]) === 100);
-      const notReady = UNITS.filter(u => overallReadiness(unitData[u.id]) < 100).length;
+      const allReady = UNITS.every(u => overallReadiness(unitData[u.id], u.id) === 100);
+      const notReady = UNITS.filter(u => overallReadiness(unitData[u.id], u.id) < 100).length;
       const cmdChecklist = unitData._commander?.checklist || [];
       const cmdPct = calcChecklistPct(cmdChecklist);
       const cmdColor = statusColor(cmdPct);
@@ -673,7 +688,7 @@
               color:#4a6a7a;letter-spacing:0.12em;margin-bottom:8px">UNIT READINESS</div>
             <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start">
               ${UNITS.map(unit => {
-                const overall = overallReadiness(unitData[unit.id]);
+                const overall = overallReadiness(unitData[unit.id], unit.id);
                 const color   = statusColor(overall);
                 return `<div style="display:flex;align-items:center;gap:5px">
                   <span style="display:inline-block;width:7px;height:7px;border-radius:50%;
