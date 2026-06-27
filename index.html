@@ -275,6 +275,7 @@
     let goLiveTime   = null;
     let loginAttempts = 0;
     let showChecklist = true;
+    let isRendering = false;
     const MAX_ATTEMPTS = 5;
 
     function ts() { return new Date().toLocaleTimeString("en-SG",{hour12:false}); }
@@ -366,6 +367,7 @@
     function listenToData() {
       const dbRef = ref(db,"readiness2");
       onValue(dbRef, snap => {
+        if (isRendering) return;
         const val = snap.val();
         if (val && val.units) {
           UNITS.forEach(u => {
@@ -491,7 +493,13 @@
 
     // ─── MAIN RENDER ────────────────────────────────────────────────────────
     function renderDashboard() {
-      renderRow0(); renderRow1(); renderRow2(); renderDetailPanel(); renderGoLivePanel(); renderGoLiveBadge();
+      if (isRendering) return;
+      isRendering = true;
+      try {
+        renderRow0(); renderRow1(); renderRow2(); renderDetailPanel(); renderGoLivePanel(); renderGoLiveBadge();
+      } finally {
+        isRendering = false;
+      }
     }
 
     function renderUnitCard(unit) {
