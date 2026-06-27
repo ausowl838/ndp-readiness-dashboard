@@ -294,8 +294,11 @@
     function buildBlankUnitData() {
       const state = {};
       UNITS.forEach(unit => {
+        try {
         const tmpl = getUnitTemplate(unit);
+        if (!tmpl) { console.warn("No template for unit:", unit.id); return; }
         const manTmpl = MANPOWER_TEMPLATE[tmpl.man];
+        if (!manTmpl) { console.warn("No manpower template:", tmpl.man, "for unit:", unit.id); return; }
         state[unit.id] = {
           manpower: manTmpl.map((r,i) => ({
             id:i, role:r.role, required:r.required,
@@ -320,6 +323,7 @@
             item:c.item, cat:c.cat, checked:false, ts:null,
           }));
         }
+        } catch(e) { console.error("buildBlankUnitData error for", unit.id, e); }
       });
       state._commander = {
         checklist: COMMANDER_CHECKLIST.map(item => ({ item, checked:false, ts:null })),
@@ -482,6 +486,7 @@
 
     function renderUnitCard(unit) {
       const ud = unitData[unit.id];
+      if (!ud) return "";
       const overall = overallReadiness(ud);
       const isActive = activeUnit === unit.id;
       const pc = unit.type==="FAP"?"#a78bfa":unit.type==="SPEC"?"#f59e0b":"#4a9eff";
