@@ -542,6 +542,11 @@
     function renderDetailPanel() {
       const unit = UNITS.find(u=>u.id===activeUnit);
       const ud   = unitData[activeUnit];
+      if (!unit || !ud) return;
+      const dh = document.getElementById("detailHeader");
+      const mp = document.getElementById("manpowerPanel");
+      const cp = document.getElementById("checklistPanels");
+      if (!dh || !mp || !cp) return;
       const pc   = unit.type==="FAP"?"#a78bfa":unit.type==="SPEC"?"#f59e0b":"#4a9eff";
       const pbg  = unit.type==="FAP"?"rgba(167,139,250,0.1)":unit.type==="SPEC"?"rgba(245,158,11,0.1)":"rgba(74,158,255,0.1)";
       const typeLabel = unit.type==="FAP"?"FAP(E)":unit.type==="SPEC"?"SPECIALIST":"MEDICAL POST";
@@ -555,15 +560,15 @@
         </div>
         <div style="font-size:11px;color:#4a6a7a">Click any card above to switch</div>`;
 
-      document.getElementById("manpowerPanel").innerHTML = renderManpowerPanel(ud.manpower, activeUnit);
+      mp.innerHTML = renderManpowerPanel(ud.manpower, activeUnit);
 
       if (ud.checklist) {
-        document.getElementById("checklistPanels").innerHTML = `
+        cp.innerHTML = `
           <div class="panel" style="grid-column:span 2">
             ${renderChecklistPanel("CHECKLIST", ud.checklist, "checklist", activeUnit)}
           </div>`;
       } else {
-        document.getElementById("checklistPanels").innerHTML = `
+        cp.innerHTML = `
           <div class="panel">${renderChecklistPanel("LOGISTICS / EQUIPMENT", ud.logistics, "logistics", activeUnit)}</div>
           <div class="panel">${renderChecklistPanel("AMBULANCE", ud.ambulance, "ambulance", activeUnit)}</div>`;
       }
@@ -645,13 +650,16 @@
 
     // ─── COMMANDER PANEL ────────────────────────────────────────────────────
     function renderGoLivePanel() {
+      const ga = document.getElementById("goLiveAssessment");
+      const gb = document.getElementById("goLiveBtn");
+      if (!ga || !gb) return;
       const allReady = UNITS.every(u => overallReadiness(unitData[u.id]) === 100);
       const notReady = UNITS.filter(u => overallReadiness(unitData[u.id]) < 100).length;
       const cmdChecklist = unitData._commander?.checklist || [];
       const cmdPct = calcChecklistPct(cmdChecklist);
       const cmdColor = statusColor(cmdPct);
 
-      document.getElementById("goLiveAssessment").innerHTML = `
+      ga.innerHTML = `
         <div style="display:flex;gap:24px;flex-wrap:wrap">
           <!-- Unit Status -->
           <div style="flex:1;min-width:300px">
@@ -701,7 +709,7 @@
           </div>
         </div>`;
 
-      document.getElementById("goLiveBtn").innerHTML = !goLiveStatus
+      gb.innerHTML = !goLiveStatus
         ? `<button onclick="declareGoLive()" style="padding:10px 20px;background:rgba(0,255,157,0.1);
             border:1px solid #00ff9d;border-radius:6px;color:#00ff9d;font-family:'Syne',sans-serif;
             font-size:12px;font-weight:800;letter-spacing:0.1em;cursor:pointer;white-space:nowrap">
@@ -714,6 +722,7 @@
 
     function renderGoLiveBadge() {
       const badge = document.getElementById("goLiveBadge");
+      if (!badge) return;
       const color = goLiveStatus?"#00ff9d":"#ff4444";
       const bg    = goLiveStatus?"rgba(0,255,157,0.12)":"rgba(255,68,68,0.1)";
       badge.style.background=bg; badge.style.borderColor=color; badge.style.color=color;
