@@ -347,7 +347,12 @@
     }
     function overallReadiness(ud, unitId) {
       if (!ud) return 0;
-      if (isSpecUnit(unitId)) return calcChecklistPct(ud.checklist);
+      // SPEC units: readiness = checklist only, manpower always ignored
+      if (isSpecUnit(unitId)) {
+        const list = ud.checklist;
+        if (!list || !list.length) return 0;
+        return calcChecklistPct(list);
+      }
       const mp = calcManpowerPct(ud.manpower);
       if (ud.checklist) return Math.round((mp + calcChecklistPct(ud.checklist))/2);
       const lg = calcChecklistPct(ud.logistics), amb = calcChecklistPct(ud.ambulance);
@@ -367,7 +372,9 @@
             if (val.units[u.id]) {
               // Deep merge: preserve blank structure, overlay Firebase values
               const fb = val.units[u.id];
-              if (fb.manpower && !isSpecUnit(u.id)) {
+              // Always skip manpower for SPEC units — wipe any stale Firebase data
+            if (isSpecUnit(u.id)) { unitData[u.id].manpower = []; }
+            if (fb.manpower && !isSpecUnit(u.id)) {
                 fb.manpower.forEach((fr, i) => {
                   if (unitData[u.id].manpower[i]) {
                     unitData[u.id].manpower[i].names = fr.names || unitData[u.id].manpower[i].names;
@@ -511,13 +518,19 @@
           <span style="font-size:9px;color:#4a5a6a;letter-spacing:0.07em">MANPOWER</span>
           <span style="font-size:9px;color:${statusColor(mp)}">${mp}%</span>
         </div>${progressBar(mp)}</div>`;
-      if (ud_.checklist) {
+      if (isSpec && ud_.checklist) {
         const cp = calcChecklistPct(ud_.checklist);
         bars += `<div style="margin-bottom:3px">
           <div style="display:flex;justify-content:space-between">
             <span style="font-size:9px;color:#4a5a6a;letter-spacing:0.07em">READINESS</span>
             <span style="font-size:9px;color:${statusColor(cp)}">${cp}%</span>
           </div>${progressBar(cp)}</div>`;
+      } else if (isSpec) {
+        bars += `<div style="margin-bottom:3px">
+          <div style="display:flex;justify-content:space-between">
+            <span style="font-size:9px;color:#4a5a6a;letter-spacing:0.07em">READINESS</span>
+            <span style="font-size:9px;color:#ff4444">0%</span>
+          </div>${progressBar(0)}</div>`;
       } else {
         const lg=calcChecklistPct(ud_.logistics), amb=calcChecklistPct(ud_.ambulance);
         bars += `<div style="margin-bottom:3px">
