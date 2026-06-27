@@ -676,19 +676,11 @@
               ${UNITS.map(unit => {
                 const overall = overallReadiness(unitData[unit.id]);
                 const color   = statusColor(overall);
-                const note    = unitData[unit.id]?._note || "";
-                return `<div style="display:flex;flex-direction:column;gap:3px;min-width:120px">
-                  <div style="display:flex;align-items:center;gap:5px">
-                    <span style="display:inline-block;width:7px;height:7px;border-radius:50%;
-                      background:${color};box-shadow:0 0 5px ${color}"></span>
-                    <span style="font-size:11px;color:#8a9aaa">${unit.label}</span>
-                    <span style="font-size:10px;font-weight:700;color:${color}">${overall}%</span>
-                  </div>
-                  <input type="text" value="${note}" placeholder="add note..."
-                    onchange="updateUnitNote('${unit.id}',this.value)"
-                    style="font-size:9px;color:#4a7a6a;background:rgba(255,255,255,0.03);
-                    border:none;border-bottom:1px solid #1e2a35;outline:none;width:100%;
-                    font-family:'IBM Plex Mono',monospace;padding:1px 0"/>
+                return `<div style="display:flex;align-items:center;gap:5px">
+                  <span style="display:inline-block;width:7px;height:7px;border-radius:50%;
+                    background:${color};box-shadow:0 0 5px ${color}"></span>
+                  <span style="font-size:11px;color:#8a9aaa">${unit.label}</span>
+                  <span style="font-size:10px;font-weight:700;color:${color}">${overall}%</span>
                 </div>`;
               }).join("")}
             </div>
@@ -697,6 +689,15 @@
               by ${currentUser?.label||"Commander"}</div>` : ""}
             ${!allReady&&!goLiveStatus ? `<div style="margin-top:6px;font-size:11px;color:#ffb800">
               ⚠ ${notReady} unit(s) not yet at 100%</div>` : ""}
+            <div style="margin-top:10px">
+              <div style="font-size:9px;color:#3a5a6a;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px">Commander's Note</div>
+              <textarea rows="2" placeholder="e.g. VVIP not required for CR2..."
+                onchange="updateDashboardNote(this.value)"
+                style="width:100%;background:rgba(255,255,255,0.03);border:1px solid #1e2a35;
+                border-radius:4px;color:#8ab4a4;padding:6px 8px;font-size:11px;resize:none;
+                font-family:'IBM Plex Mono',monospace;outline:none;line-height:1.5"
+              >${unitData._commander?._note||""}</textarea>
+            </div>
           </div>
           <!-- Commander CR1 Readout Checklist -->
           <div style="min-width:280px">
@@ -782,10 +783,10 @@
       saveCommander();
       renderGoLivePanel();
     };
-    window.updateUnitNote = (unitId, val) => {
-      if (!unitData[unitId]) return;
-      unitData[unitId]._note = val;
-      saveUnitData(unitId);
+    window.updateDashboardNote = (val) => {
+      if (!unitData._commander) unitData._commander = { checklist:[] };
+      unitData._commander._note = val;
+      saveCommander();
     };
     window.declareGoLive    = () => saveGoLive(true);
     window.declareStandDown = () => saveGoLive(false);
