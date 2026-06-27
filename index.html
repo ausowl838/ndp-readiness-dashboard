@@ -54,18 +54,18 @@
     // ─── UNITS CONFIG ───────────────────────────────────────────────────────
     // type: "MP" = medical post, "FAP" = first aid post, "SPEC" = specialist unit
     const UNITS = [
-      { id:"MP1",  label:"MP North",            prefix:"MP",    type:"MP",   row:0 },
-      { id:"MP2",  label:"MP South",            prefix:"MP",    type:"MP",   row:0 },
-      { id:"MP3",  label:"MP Arena",            prefix:"MP",    type:"MP",   row:0 },
-      { id:"MP4",  label:"MP WACA",             prefix:"MP",    type:"MP",   row:0 },
-      { id:"MP5",  label:"MP VVIP",             prefix:"MP",    type:"MP",   row:0 },
-      { id:"FAP1", label:"FAP(E) Show",         prefix:"FAP(E)",type:"FAP",  row:0 },
-      { id:"FAP2", label:"FAP(E) Beneficiaries",prefix:"FAP(E)",type:"FAP",  row:0 },
-      { id:"FAP3", label:"FAP(E) Celebrations", prefix:"FAP(E)",type:"FAP",  row:0 },
-      { id:"PAED", label:"Paediatric Team",     prefix:"",      type:"SPEC", row:1 },
-      { id:"QRT",  label:"QRT (1–4)",           prefix:"",      type:"SPEC", row:1 },
-      { id:"SBT",  label:"Stretcher Bearer",    prefix:"",      type:"SPEC", row:1 },
-      { id:"CP5",  label:"Amb Reserve CP5",     prefix:"",      type:"SPEC", row:1 },
+      { id:"MP1",  label:"MP North",             prefix:"MP",    type:"MP",   row:0 },
+      { id:"MP2",  label:"MP South",             prefix:"MP",    type:"MP",   row:0 },
+      { id:"MP3",  label:"MP Arena",             prefix:"MP",    type:"MP",   row:0 },
+      { id:"MP4",  label:"MP WACA",              prefix:"MP",    type:"MP",   row:0 },
+      { id:"MP5",  label:"MP VVIP",              prefix:"MP",    type:"MP",   row:0 },
+      { id:"FAP1", label:"FAP(E) Show",          prefix:"FAP(E)",type:"FAP",  row:1 },
+      { id:"FAP2", label:"FAP(E) Beneficiaries", prefix:"FAP(E)",type:"FAP",  row:1 },
+      { id:"FAP3", label:"FAP(E) Celebrations",  prefix:"FAP(E)",type:"FAP",  row:1 },
+      { id:"PAED", label:"Paediatric Team",      prefix:"",      type:"SPEC", row:1 },
+      { id:"QRT",  label:"QRT (1-4)",            prefix:"",      type:"SPEC", row:2 },
+      { id:"SBT",  label:"Stretcher Bearer",     prefix:"",      type:"SPEC", row:2 },
+      { id:"CP5",  label:"Amb Reserve CP5",      prefix:"",      type:"SPEC", row:2 },
     ];
 
     // ─── MANPOWER TEMPLATES ─────────────────────────────────────────────────
@@ -477,7 +477,7 @@
 
     // ─── MAIN RENDER ────────────────────────────────────────────────────────
     function renderDashboard() {
-      renderRow0(); renderRow1(); renderDetailPanel(); renderGoLivePanel(); renderGoLiveBadge();
+      renderRow0(); renderRow1(); renderRow2(); renderDetailPanel(); renderGoLivePanel(); renderGoLiveBadge();
     }
 
     function renderUnitCard(unit) {
@@ -536,6 +536,9 @@
     }
     function renderRow1() {
       document.getElementById("row1Grid").innerHTML = UNITS.filter(u=>u.row===1).map(renderUnitCard).join("");
+    }
+    function renderRow2() {
+      document.getElementById("row2Grid").innerHTML = UNITS.filter(u=>u.row===2).map(renderUnitCard).join("");
     }
 
     // ─── DETAIL PANEL ───────────────────────────────────────────────────────
@@ -736,14 +739,14 @@
     window.selectUnit = (unitId) => {
       activeUnit = unitId;
       activeRow  = UNITS.find(u=>u.id===unitId)?.row||0;
-      renderDetailPanel(); renderRow0(); renderRow1();
+      renderDetailPanel(); renderRow0(); renderRow1(); renderRow2();
     };
     window.togglePerson = (unitId, roleIdx, nameIdx) => {
       const person = unitData[unitId].manpower[roleIdx].names[nameIdx];
       person.present = !person.present;
       person.ts      = person.present ? ts() : null;
       saveUnitData(unitId);
-      renderDetailPanel(); renderRow0(); renderRow1(); renderGoLivePanel();
+      renderDetailPanel(); renderRow0(); renderRow1(); renderRow2(); renderGoLivePanel();
     };
     window.updateAttached = (unitId, roleIdx, field, val) => {
       const num = Math.max(0,parseInt(val)||0);
@@ -751,14 +754,14 @@
       if (field==="count") role.attachedCount=num;
       else role.attachedPresent=Math.min(num,role.attachedCount);
       saveUnitData(unitId);
-      renderRow0(); renderRow1(); renderGoLivePanel();
+      renderRow0(); renderRow1(); renderRow2(); renderGoLivePanel();
     };
     window.toggleItem = (unitId, domain, idx) => {
       const item = unitData[unitId][domain][idx];
       item.checked = !item.checked;
       item.ts      = item.checked ? ts() : null;
       saveUnitData(unitId);
-      renderDetailPanel(); renderRow0(); renderRow1(); renderGoLivePanel();
+      renderDetailPanel(); renderRow0(); renderRow1(); renderRow2(); renderGoLivePanel();
     };
     window.toggleCommander = (idx) => {
       const ci = unitData._commander.checklist[idx];
@@ -827,8 +830,9 @@
       letter-spacing:0.1em;text-align:right}
     .row-label{font-size:10px;color:#2e4a5a;letter-spacing:0.12em;font-weight:700;
       text-transform:uppercase;margin-bottom:6px}
-    #row0Grid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px}
+    #row0Grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
     #row1Grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+    #row2Grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
     .detail-section{background:rgba(8,14,22,0.8);border:1px solid #0e1c28;border-radius:10px;padding:14px 18px}
     #detailHeader{display:flex;justify-content:space-between;align-items:center;
       margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #0e1c28}
@@ -885,16 +889,22 @@
       </div>
     </div>
 
-    <!-- Row 0: MPs + FAPs -->
+    <!-- Row 0: MPs -->
     <div>
-      <div class="row-label">▸ Medical Posts &amp; First Aid Posts</div>
+      <div class="row-label">▸ Medical Posts</div>
       <div id="row0Grid"></div>
     </div>
 
-    <!-- Row 1: Specialist Units -->
+    <!-- Row 1: FAPs + Paediatric -->
+    <div>
+      <div class="row-label">▸ First Aid Posts &amp; Paediatric Team</div>
+      <div id="row1Grid"></div>
+    </div>
+
+    <!-- Row 2: Specialist Units -->
     <div>
       <div class="row-label">▸ Specialist Units</div>
-      <div id="row1Grid"></div>
+      <div id="row2Grid"></div>
     </div>
 
     <!-- Detail Panel -->
