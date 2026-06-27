@@ -352,10 +352,28 @@
 
     // ─── FIREBASE ───────────────────────────────────────────────────────────
     function listenToData() {
-      onValue(ref(db,"readiness2"), snap => {
+      const dbRef = ref(db,"readiness2");
+      onValue(dbRef, snap => {
         const val = snap.val();
         if (val && val.units) {
-          UNITS.forEach(u => { if (val.units[u.id]) unitData[u.id] = val.units[u.id]; });
+          UNITS.forEach(u => {
+            if (val.units[u.id]) {
+              // Deep merge: preserve blank structure, overlay Firebase values
+              const fb = val.units[u.id];
+              if (fb.manpower) {
+                fb.manpower.forEach((fr, i) => {
+                  if (unitData[u.id].manpower[i]) {
+                    unitData[u.id].manpower[i].names = fr.names || unitData[u.id].manpower[i].names;
+                    unitData[u.id].manpower[i].attachedCount   = fr.attachedCount   || 0;
+                    unitData[u.id].manpower[i].attachedPresent = fr.attachedPresent || 0;
+                  }
+                });
+              }
+              if (fb.checklist)  unitData[u.id].checklist  = fb.checklist;
+              if (fb.logistics)  unitData[u.id].logistics  = fb.logistics;
+              if (fb.ambulance)  unitData[u.id].ambulance  = fb.ambulance;
+            }
+          });
         }
         if (val && val._commander) unitData._commander = val._commander;
         if (val && val.goLive) {
@@ -363,6 +381,9 @@
           goLiveTime   = val.goLive.time||null;
         }
         renderDashboard();
+      }, err => {
+        console.warn("Firebase read error:", err.message);
+        // Rules may not be set yet — dashboard already rendered from blank state, continue
       });
     }
     function saveUnitData(unitId) {
@@ -415,7 +436,10 @@
       document.getElementById("loginScreen").style.display = "none";
       document.getElementById("dashboard").style.display   = "flex";
       document.getElementById("userLabel").textContent     = currentUser.label;
+      // Build blank state and render IMMEDIATELY — don't wait for Firebase
       unitData = buildBlankUnitData();
+      renderDashboard();
+      // Then layer Firebase data on top
       listenToData();
     }
     const savedUser = sessionStorage.getItem("ndp_r_user");
