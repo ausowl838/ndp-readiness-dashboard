@@ -95,6 +95,7 @@ button{font-family:'IBM Plex Mono',monospace}
   <div class="detail-section" id="detailSection">
     <div id="detailHdr" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #0e1c28"></div>
     <div id="detailPanels" style="display:grid;gap:12px"></div>
+    <div id="detailRemarks"></div>
   </div>
 
   <div class="bottom-panel">
@@ -114,9 +115,10 @@ button{font-family:'IBM Plex Mono',monospace}
     </div>
     <div style="margin-top:12px;display:flex;align-items:center;gap:12px">
       <div style="font-family:'Syne',sans-serif;font-size:10px;font-weight:700;color:#4a6a7a;letter-spacing:0.12em;white-space:nowrap">COMMANDER'S NOTE</div>
-      <textarea id="cmdNote" rows="1" placeholder="e.g. VVIP not required for CR2..."
-        style="flex:1;background:transparent;border:none;border-bottom:1px solid #1e2a35;
-        color:#8ab4a4;padding:4px 0;font-size:11px;resize:none;font-family:'IBM Plex Mono',monospace;outline:none;line-height:1.5"></textarea>
+      <textarea id="cmdNote" rows="3" placeholder="e.g. VVIP not required for CR2..."
+        style="flex:1;background:rgba(255,255,255,0.02);border:1px solid #1e2a35;border-radius:4px;
+        color:#8ab4a4;padding:6px 8px;font-size:11px;resize:vertical;font-family:'IBM Plex Mono',monospace;
+        outline:none;line-height:1.6;min-height:56px"></textarea>
       <div id="goLiveBtn"></div>
     </div>
   </div>
@@ -213,6 +215,7 @@ function buildBlank() {
     }
   });
   s._cmd = {checklist: mkList(CMD_LIST), note:""};
+  UNITS.forEach(u => { if (!s[u.id]._remarks) s[u.id]._remarks = ""; });
   return s;
 }
 let state = buildBlank();
@@ -250,6 +253,11 @@ function fbListen() {
         if (fb.logistics && s.logistics) s.logistics = fb.logistics;
         if (fb.ambulance && s.ambulance) s.ambulance = fb.ambulance;
         if (fb.checklist && s.checklist) s.checklist = fb.checklist;
+        if (fb._remarks !== undefined) {
+          s._remarks = fb._remarks;
+          const rel = document.getElementById(`remarks_${u.id}`);
+          if (rel && document.activeElement !== rel) rel.value = fb._remarks;
+        }
       });
     }
     if (val._cmd) {
@@ -269,6 +277,7 @@ function fbSave(uid) {
   if (s.logistics) p.logistics = s.logistics;
   if (s.ambulance) p.ambulance = s.ambulance;
   if (s.checklist) p.checklist = s.checklist;
+  if (s._remarks !== undefined) p._remarks = s._remarks;
   update(ref(db,`r4/units/${uid}`), p);
 }
 function fbSaveCmd() { update(ref(db,"r4/_cmd"), state._cmd); }
@@ -418,6 +427,19 @@ function renderDetail() {
       <div class="panel">${renderChecklist("LOGISTICS / EQUIPMENT",ud.logistics,"logistics",activeUnit)}</div>
       <div class="panel">${renderChecklist("AMBULANCE",ud.ambulance,"ambulance",activeUnit)}</div>`;
   }
+  // Remarks field — always shown, outside grid
+  const remarksVal = ud._remarks || "";
+  document.getElementById("detailRemarks").innerHTML=`
+    <div style="display:flex;align-items:flex-start;gap:12px;margin-top:12px;padding-top:12px;border-top:1px solid #0e1c28">
+      <div style="font-family:'Syne',sans-serif;font-size:10px;font-weight:700;color:#4a6a7a;
+        letter-spacing:0.12em;white-space:nowrap;padding-top:4px">REMARKS</div>
+      <textarea id="remarks_${activeUnit}" rows="2"
+        placeholder="Enter remarks for ${unit.label}..."
+        oninput="saveRemarks('${activeUnit}',this.value)"
+        style="flex:1;background:rgba(255,255,255,0.03);border:1px solid #1e2a35;border-radius:4px;
+        color:#8ab4a4;padding:6px 8px;font-size:11px;resize:vertical;font-family:'IBM Plex Mono',monospace;
+        outline:none;line-height:1.6;min-height:44px">${remarksVal}</textarea>
+    </div>`;
 }
 
 function renderBottom() {
@@ -463,6 +485,7 @@ function renderBadge() {
 
 // ── EVENTS ───────────────────────────────────────────────────────────────────
 window.selUnit = id => { activeUnit=id; renderCards(); renderDetail(); };
+window.saveRemarks = (uid, val) => { state[uid]._remarks=val; fbSave(uid); };
 window.tickItem = (uid, domain, idx) => {
   const item=state[uid][domain][idx];
   item.checked=!item.checked; item.ts=item.checked?nowTs():null;
