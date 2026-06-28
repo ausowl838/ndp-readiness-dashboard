@@ -99,6 +99,14 @@ button{font-family:'IBM Plex Mono',monospace}
   </div>
 
   <div class="bottom-panel">
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px">
+      <button onclick="exportData()" style="padding:6px 14px;background:rgba(74,158,255,0.1);
+        border:1px solid #4a9eff;border-radius:5px;color:#4a9eff;font-family:'Syne',sans-serif;
+        font-size:10px;font-weight:700;letter-spacing:0.1em;cursor:pointer">⬇ EXPORT REPORT</button>
+      <button onclick="confirmReset()" style="padding:6px 14px;background:rgba(255,68,68,0.08);
+        border:1px solid #ff4444;border-radius:5px;color:#ff4444;font-family:'Syne',sans-serif;
+        font-size:10px;font-weight:700;letter-spacing:0.1em;cursor:pointer">↺ RESET DASHBOARD</button>
+    </div>
     <div style="display:flex;gap:24px;flex-wrap:wrap">
       <div style="flex:1;min-width:280px">
         <div style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:#4a6a7a;letter-spacing:0.12em;margin-bottom:8px">UNIT READINESS</div>
@@ -505,6 +513,97 @@ document.getElementById("cmdNote").addEventListener("input", e => {
   state._cmd.note=e.target.value; fbSaveCmd();
 });
 
+// ── EXPORT ───────────────────────────────────────────────────────────────────
+window.exportData = () => {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString("en-SG",{day:"2-digit",month:"short",year:"numeric"});
+  const timeStr = now.toLocaleTimeString("en-SG",{hour12:false});
+  let txt = "";
+  txt += "=".repeat(60) + "\n";
+  txt += "  MEDICAL COMMAND POST — READINESS REPORT\n";
+  txt += `  Exported: ${dateStr}  ${timeStr}\n`;
+  txt += `  Exported by: ${user?.label||"Commander"}\n`;
+  txt += "=".repeat(60) + "\n\n";
+
+  // Go Live status
+  txt += `GO LIVE STATUS: ${goLive?"ACTIVE":"STANDBY"}\n`;
+  if (goLive && goLiveTs) txt += `Declared at: ${new Date(goLiveTs).toLocaleTimeString("en-SG",{hour12:false})}\n`;
+  txt += "\n";
+
+  // Unit readiness
+  txt += "-".repeat(60) + "\n";
+  txt += "UNIT READINESS SUMMARY\n";
+  txt += "-".repeat(60) + "\n";
+  UNITS.forEach(u => {
+    const ud = state[u.id];
+    const ov = unitOverall(ud, u.id);
+    txt += `\n${u.label.padEnd(30)} ${ov}%\n`;
+    if (SPEC_IDS.includes(u.id)) {
+      (ud.checklist||[]).forEach(item => {
+        const mark = item.checked ? "[✓]" : "[ ]";
+        const ts   = item.ts ? `  ${item.ts}` : "";
+        txt += `  ${mark} ${item.i}${ts}\n`;
+      });
+    } else {
+      txt += "  LOGISTICS / EQUIPMENT:\n";
+      (ud.logistics||[]).forEach(item => {
+        const mark = item.checked ? "[✓]" : "[ ]";
+        const ts   = item.ts ? `  ${item.ts}` : "";
+        txt += `    ${mark} ${item.i}${ts}\n`;
+      });
+      txt += "  AMBULANCE:\n";
+      (ud.ambulance||[]).forEach(item => {
+        const mark = item.checked ? "[✓]" : "[ ]";
+        const ts   = item.ts ? `  ${item.ts}` : "";
+        txt += `    ${mark} ${item.i}${ts}\n`;
+      });
+    }
+    if (ud._remarks) txt += `  REMARKS: ${ud._remarks}\n`;
+  });
+
+  // Commander readout
+  txt += "\n" + "-".repeat(60) + "\n";
+  txt += "COMMANDER'S READOUT\n";
+  txt += "-".repeat(60) + "\n";
+  (state._cmd.checklist||[]).forEach(ci => {
+    const mark = ci.checked ? "[✓]" : "[ ]";
+    const ts   = ci.ts ? `  ${ci.ts}` : "";
+    txt += `${mark} ${ci.i}${ts}\n`;
+  });
+  if (state._cmd.note) txt += `\nCOMMANDER'S NOTE:\n${state._cmd.note}\n`;
+  txt += "\n" + "=".repeat(60) + "\n";
+  txt += "END OF REPORT\n";
+
+  // Download as .txt file
+  const blob = new Blob([txt], {type:"text/plain"});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  const fn   = `MCP_Readiness_${dateStr.replace(/ /g,"_")}_${timeStr.replace(/:/g,"")}.txt`;
+  a.href=url; a.download=fn; a.click();
+  URL.revokeObjectURL(url);
+};
+
+// ── RESET ─────────────────────────────────────────────────────────────────────
+window.confirmReset = () => {
+  const modal = document.getElementById("resetModal");
+  if (modal) modal.style.display="flex";
+};
+window.doReset = () => {
+  // Clear Firebase
+  set(ref(db,"r4"), null);
+  // Reset local state
+  state = buildBlank();
+  goLive=false; goLiveTs=null;
+  document.getElementById("cmdNote").value="";
+  const modal = document.getElementById("resetModal");
+  if (modal) modal.style.display="none";
+  render();
+};
+window.cancelReset = () => {
+  const modal = document.getElementById("resetModal");
+  if (modal) modal.style.display="none";
+};
+
 // ── CLOCK ─────────────────────────────────────────────────────────────────────
 function tick() {
   const now=new Date();
@@ -513,5 +612,28 @@ function tick() {
 }
 setInterval(tick,1000); tick();
 </script>
+<!-- Reset Confirmation Modal -->
+<div id="resetModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);
+  z-index:1000;align-items:center;justify-content:center">
+  <div style="background:#0a1018;border:1px solid #ff4444;border-radius:10px;
+    padding:32px 40px;max-width:400px;width:90%;text-align:center">
+    <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;
+      color:#ff4444;letter-spacing:0.06em;margin-bottom:8px">⚠ RESET DASHBOARD</div>
+    <div style="font-size:12px;color:#8a9aaa;line-height:1.6;margin-bottom:8px">
+      This will clear ALL readiness data for every unit across all devices.
+    </div>
+    <div style="font-size:11px;color:#ffb800;margin-bottom:24px">
+      Export a report first if you need a record of this session.
+    </div>
+    <div style="display:flex;gap:12px;justify-content:center">
+      <button onclick="cancelReset()" style="padding:10px 24px;background:rgba(255,255,255,0.05);
+        border:1px solid #2e3a4a;border-radius:6px;color:#8a9aaa;font-family:'Syne',sans-serif;
+        font-size:12px;font-weight:700;letter-spacing:0.08em;cursor:pointer">CANCEL</button>
+      <button onclick="doReset()" style="padding:10px 24px;background:rgba(255,68,68,0.15);
+        border:1px solid #ff4444;border-radius:6px;color:#ff4444;font-family:'Syne',sans-serif;
+        font-size:12px;font-weight:800;letter-spacing:0.1em;cursor:pointer">CONFIRM RESET</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
